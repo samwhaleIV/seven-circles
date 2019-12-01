@@ -47,4 +47,7 @@ function addMap(name,map) {
     map.name = name;
     worldMaps[name] = map;
 }
+function deleteMap(name) {
+    delete worldMaps[name];
+}
 addMap("test-map",getRandomMap(100,100));
