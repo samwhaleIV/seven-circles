@@ -1,0 +1,29 @@
+{
+  "name": "uv27",
+  "productName": "You Versus 27 Elves",
+  "version": "1.0.0",
+  "description": "The Christmas elves have turned",
+  "main": "app.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "mistopportunity",
+  "license": "CC-BY-NC-4.0",
+  "devDependencies": {
+    "electron": "^4.0.5",
+    "electron-rebuild": "^1.8.4"
+  },
+  "chromium-args": "--in-process-gpu --disable-transparency",
+  "build": {
+    "appId": "com.mistopportunity.uv27",
+    "productName": "You Versus 27 Elves",
+    "icon": "/AppIcon.icns",
+    "files": [
+      "!node_modules/greenworks/deps/**/*",
+      "!/AppIcon.icns"
+    ]
+  },
+  "dependencies": {
+    "greenworks": "git+https://github.com/greenheartgames/greenworks.git"
+  }
+}
