@@ -51,5 +51,5 @@ const WorldTextureAnimationStart = Math.pow(WorldTextureColumns,2) - WorldTextur
 const FootPrintTiles = {
 };
 const FALLBACK_MAP_ID = "missing_map";
-const OVERWORLD_MUSIC_FADE_TIME = 100;
-const FAKE_OVERWORLD_LOAD_TIME = 500;
+
+const GameCharacterData = {};

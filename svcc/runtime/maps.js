@@ -4,7 +4,7 @@ function getEmptyLayer(size) {
     return layer;
 }
 
-function getMap(width,height,renderScale=3) {
+function getMap(width,height,renderScale=2) {
     const upperXBound = width - 1;
     const upperYBound = height - 1;
     const tileCount = width * height;
