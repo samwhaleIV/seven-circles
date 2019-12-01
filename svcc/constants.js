@@ -50,6 +50,5 @@ const WorldTextureAnimationRows = 4;
 const WorldTextureAnimationStart = Math.pow(WorldTextureColumns,2) - WorldTextureColumns * WorldTextureAnimationRows;
 const FootPrintTiles = {
 };
-const FALLBACK_MAP_ID = "missing_map";
 
 const GameCharacterData = {};
