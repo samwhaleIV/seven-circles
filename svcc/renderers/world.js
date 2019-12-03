@@ -3,9 +3,12 @@ import WorldRenderer from "../../../elven-engine/renderers/world.js";
 function SVCCWorldRenderer(...parameters) {
     WorldRenderer.apply(this,parameters);
     this.setTilesetImage("world-tileset");
+
     this.escapeMenuDisabled = true;
+    this.forcedRenderScale = 2;
+
     this.loadLastMapOrDefault = () => {
-        this.updateMap("test-map");
+        this.updateMap(ENV_FLAGS.DEBUG_MAP);
         return null;
     }
 

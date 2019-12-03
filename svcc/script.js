@@ -1,6 +1,7 @@
 "use strict";
 
 import SVCCWorldRenderer from "./renderers/world.js";
+import "./runtime/maps.js";
 
 const loadCallback = () => {
     if(!SoundManager.soundsLoaded || !ImageManager.imagesLoaded) {
