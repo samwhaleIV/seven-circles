@@ -49,7 +49,7 @@ function TileBridge(objects) {
         }
         const grid = new Array(size);
         grid[0] = this.start;
-        const end = size - 2;
+        const end = size - 1;
         for(let i = 1;i<end;i++) {
             grid[i] = this.middle;
         }

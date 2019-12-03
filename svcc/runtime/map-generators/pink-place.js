@@ -22,13 +22,19 @@ bridge.addDynamicObject("floor",bridge.get3x3Grid,bridge.get9GridMeta(67));
 
 
 function PinkPlace(layers) {
+    this.map.backgroundColor = "white";
     function drawFloor(x,y,width,height) {
         layers.background.applyGrid(x,y,objects.floor.getGrid(width,height));
-    }    
-    //Layers is baseData wrapped in a CordHelper (../cord-helper.js)
-    this.map.backgroundColor = "white";
+    }
+
+    function drawHorizontalFence(x,y,length) {
+        layers.foreground.applyHorizontalGrid(x,y,objects.horizontal_fence.getGrid(length));
+    }
+
 
     drawFloor(2,2,10,6);
+
+    drawHorizontalFence(3,2,4);
 
     if(this.withLighting) {
         //generate lighting information?
