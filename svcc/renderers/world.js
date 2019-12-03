@@ -5,7 +5,7 @@ function SVCCWorldRenderer(...parameters) {
     this.setTilesetImage("world-tileset");
 
     this.escapeMenuDisabled = true;
-    this.forcedRenderScale = 2;
+    this.forcedRenderScale = 1.5;
 
     this.loadLastMapOrDefault = () => {
         this.updateMap(ENV_FLAGS.DEBUG_MAP);

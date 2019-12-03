@@ -28,13 +28,29 @@ function PinkPlace(layers) {
     }
 
     function drawHorizontalFence(x,y,length) {
-        layers.foreground.applyHorizontalGrid(x,y,objects.horizontal_fence.getGrid(length));
+        layers.foreground.applyHorizontalGrid(
+            x,y,objects.horizontal_fence.getGrid(length)
+        );
+        layers.collision.applyHorizontalGrid(
+            x,y,{tiles:new Array(length).fill(1)}
+        );
+    }
+
+    function drawVerticalFence(x,y,length) {
+        layers.foreground.applyVerticalGrid(
+            x,y,objects.vertical_fence.getGrid(length)
+        );
+        layers.collision.applyVerticalGrid(
+            x,y,{tiles:new Array(length).fill(1)}
+        );
     }
 
 
     drawFloor(2,2,10,6);
 
     drawHorizontalFence(3,2,4);
+
+    drawVerticalFence(5,6,10);
 
     if(this.withLighting) {
         //generate lighting information?
