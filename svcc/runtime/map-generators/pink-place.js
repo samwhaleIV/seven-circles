@@ -22,10 +22,13 @@ bridge.addDynamicObject("floor",bridge.get3x3Grid,bridge.get9GridMeta(67));
 
 
 function PinkPlace(layers) {
+    function drawFloor(x,y,width,height) {
+        layers.background.applyGrid(x,y,objects.floor.getGrid(width,height));
+    }    
     //Layers is baseData wrapped in a CordHelper (../cord-helper.js)
     this.map.backgroundColor = "white";
 
-    layers.background.applyGrid(3,3,objects.floor.getGrid(5,5));
+    drawFloor(2,2,10,6);
 
     if(this.withLighting) {
         //generate lighting information?
