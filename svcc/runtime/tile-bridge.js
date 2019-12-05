@@ -1,11 +1,26 @@
+import { PASS_THROUGH } from "./cord-helper.js";
+
 const DISCRETE_TYPE = Symbol("discrete");
 const DYNAMIC_TYPE = Symbol("dynamic");
+
+const NO_VALUE = Symbol("noValue");
 
 const ONE_DIMENSIONAL_TYPE = Symbol("oneDimensional");
 const TWO_DIMENSIONAL_TYPE = Symbol("twoDimensional");
 
 const NINE_GRID_SIZE_ERROR = "A 3x3 grid cannot be smaller than 3x3 (must be width >= 3 && height >= 3)";
 const THREE_GRID_SIZE_ERROR = "A 3 grid cannot be smaller in length than 3 (size must be >= 3)";
+
+const GRID_DIMENSION_MISMATCH = "Grid dimensions do not match, cannot combine grids";
+const INVALID_GRID_GROUP = "A grid group cannot be made without valid arguments";
+
+const EMPTY_GRID = {
+    type: ONE_DIMENSIONAL_TYPE,
+    width: 0,
+    height: 0,
+    size: 0,
+    tiles: [[]]
+};
 
 function TileBridge(objects) {
     this.objectTypes = {
@@ -16,26 +31,70 @@ function TileBridge(objects) {
         oneDimensional: ONE_DIMENSIONAL_TYPE,
         twoDimensional: TWO_DIMENSIONAL_TYPE
     };
-    this.addObject = (name,index,width,height) => {
+
+    this.getObject = (width,height,fill) => {
+        if(typeof fill !== "function") {
+            const fillValue = fill;
+            fill = () => fillValue;
+        }
         const tiles = new Array(width);
         for(let x = 0;x<width;x++) {
             const column = new Array(height);
-            const xIndex = index + x;
             for(let y = 0;y<height;y++) {
-                column[y] = xIndex + y * WorldTextureColumns;
+                column[y] = fill.call(null,x,y);
             }
             tiles[x] = column;
         }
-        objects[name] = {
+        const size = width * height;
+        let offsetX = 0;
+        let offsetY = 0;
+        function getOffset(x=0,y=0) {
+            offsetX += x;
+            offsetY += y;
+            x = offsetX;
+            y = offsetY;
+            return {
+                width: width,
+                height: height,
+                size: size,
+                type: DISCRETE_TYPE,
+                offset: getOffset,
+                tiles: (()=>{
+                    const newTiles = new Array(width);
+                    const difference = x + y * WorldTextureColumns;
+                    for(let x = 0;x<width;x++) {
+                        const column = new Array(height);
+                        const oldColumn = tiles[x];
+                        for(let y = 0;y<height;y++) {
+                            column[y] = oldColumn[y] + difference;
+                        }
+                        newTiles[x] = column;
+                    }
+
+                    return newTiles;
+                })()
+            }
+        }
+        return {
             width: width,
             height: height,
+            size: size,
             tiles: tiles,
-            type: DISCRETE_TYPE
+            type: DISCRETE_TYPE,
+            offset: getOffset
         }
     }
 
+    this.addObject = (name,index,width,height) => {
+        objects[name] = this.getObject(
+            width,height,
+            (x,y) =>
+            index + x + y * WorldTextureColumns
+        );
+    }
+
     this.addSmallObject = (name,index) => this.addObject(name,index,1,1);
-    this.add4x4Object = (name,index) => this.addObject(name,index,4,4);
+    this.add2x2Object = (name,index) => this.addObject(name,index,2,2);
 
     this.addDynamicObject = (name,getGrid,data) => {
         objects[name] = {
@@ -80,6 +139,114 @@ function TileBridge(objects) {
             bottomRight: row3Start + 2
 
         }
+    }
+
+    this.getGridGroup = grids => {
+        let firstGrid, gridType;
+        for(let i = 0;i<grids.length;i++) {
+            let grid = grids[i];
+            if(Array.isArray(grid)) {
+                grid = {
+                    size: grid.length,
+                    type: ONE_DIMENSIONAL_TYPE,
+                    tiles: grid
+                };
+                grids[i] = grid;
+            }
+            if(grid) {
+                firstGrid = grid;
+                if(firstGrid.type) {
+                    gridType = firstGrid.type;
+                } else {
+                    gridType = ONE_DIMENSIONAL_TYPE;
+                }
+                break;
+            }
+        }
+        const gridCount = grids.length;
+        if(gridCount < 2) {
+            if(firstGrid) {
+                return firstGrid;
+            } else {
+                return EMPTY_GRID;
+            }
+        }
+        if(!firstGrid || ! gridType) {
+            throw Error(INVALID_GRID_GROUP);
+        }
+        const suggestedFilter = new Array(gridCount).fill(null);
+        for(let i = 0;i<grids.length;i++) {
+            let grid = grids[i];
+            if(grid) {
+                if(gridType === ONE_DIMENSIONAL_TYPE) {
+                    if(Array.isArray(grid)) {
+                        grid = {
+                            size: grid.length,
+                            type: ONE_DIMENSIONAL_TYPE,
+                            tiles: grid
+                        };
+                        grids[i] = grid;
+                    }
+                    if(grid.type !== ONE_DIMENSIONAL_TYPE) {
+                        throw Error(GRID_DIMENSION_MISMATCH);
+                    }
+                }
+                if(grid.size > 0) {
+                    suggestedFilter[i] = PASS_THROUGH;
+                }
+            }
+        }
+        const newGrid = {
+            type: gridType,
+            size: firstGrid.size,
+            filter: suggestedFilter
+        };
+
+        const fillRow = (row,routine) => {
+            const size = row.length;
+            for(let x = 0;x<size;x++) {
+                const set = new Array(gridCount);
+                for(let i = 0;i<gridCount;i++) {
+                    const result = routine.call(null,grids[i],x);
+                    if(result !== NO_VALUE) {
+                        set[i] = result;
+                    }
+                }
+                row[x] = set;
+            }
+        }
+        if(gridType === ONE_DIMENSIONAL_TYPE) {
+            const size = newGrid.size;
+            const tiles = new Array(size);
+            fillRow(tiles,(grid,i)=>{
+                if(grid) {
+                    return grid.tiles[i];
+                } else {
+                    return NO_VALUE;
+                }
+            });
+            newGrid.tiles = tiles;
+        } else {
+            const width = firstGrid.width;
+            const height = firstGrid.height;
+            newGrid.width = width;
+            newGrid.height = height;
+
+            const tiles = new Array(width);
+            for(let x = 0;x<width;x++) {
+                const column = new Array(height);
+                fillRow(column,(grid,y) => {
+                    if(grid) {
+                        return grid.tiles[x][y];
+                    } else {
+                        return NO_VALUE;
+                    }
+                });
+                tiles[x] = column;
+            }
+            newGrid.tiles = tiles;
+        }
+        return newGrid;
     }
 
     this.get3x3Grid = function(width,height) {

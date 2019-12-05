@@ -9,7 +9,7 @@ bridge.addSmallObject("cake",449);
 bridge.addSmallObject("dresser",513);
 bridge.addSmallObject("container",517);
 bridge.addSmallObject("door",641);
-bridge.add4x4Object("center_heart",260);
+bridge.add2x2Object("center_heart",260);
 
 bridge.addDynamicObject("horizontal_fence",bridge.get3Grid,
     {start:257,middle:258,end:259}
@@ -26,31 +26,73 @@ function PinkPlace(layers) {
     function drawFloor(x,y,width,height) {
         layers.background.applyGrid(x,y,objects.floor.getGrid(width,height));
     }
-
     function drawHorizontalFence(x,y,length) {
-        layers.foreground.applyHorizontalGrid(
-            x,y,objects.horizontal_fence.getGrid(length)
-        );
-        layers.collision.applyHorizontalGrid(
-            x,y,{tiles:new Array(length).fill(1)}
-        );
+        const gridGroup = bridge.getGridGroup([
+            null,
+            objects.horizontal_fence.getGrid(length),
+            new Array(length).fill(1)
+        ]);
+        layers.applyHorizontalGrid(x,y,gridGroup,gridGroup.filter);
     }
 
     function drawVerticalFence(x,y,length) {
-        layers.foreground.applyVerticalGrid(
-            x,y,objects.vertical_fence.getGrid(length)
-        );
-        layers.collision.applyVerticalGrid(
-            x,y,{tiles:new Array(length).fill(1)}
-        );
+        const gridGroup = bridge.getGridGroup([
+            null,
+            objects.vertical_fence.getGrid(length),
+            new Array(length).fill(1)
+        ]);
+        layers.applyVerticalGrid(x,y,gridGroup,gridGroup.filter);
     }
+
+    function drawForegroundObject(objectName,x,y,collisionType=1) {
+        let object;
+        if(typeof objectName === "object") {
+            object = objectName;
+        } else {
+            object = objects[objectName];
+        }
+        const gridGroup = bridge.getGridGroup([
+            null,
+            object,
+            bridge.getObject(
+                object.width,
+                object.height,
+                collisionType
+            )
+        ]);
+        layers.applyGrid(x,y,gridGroup,gridGroup.filter);
+    }
+
+    function drawCenterHeart(x,y,...parameters) {
+        drawForegroundObject("center_heart",x,y,...parameters);
+    }
+
+    function drawHeart(x,y,backgroundOffset,...parameters) {
+        drawForegroundObject(objects.heart.offset(0,0).offset(backgroundOffset,0),x,y,...parameters);
+    }
+
 
 
     drawFloor(2,2,10,6);
 
-    drawHorizontalFence(3,2,4);
+    drawHorizontalFence(3,2,20);
 
     drawVerticalFence(5,6,10);
+
+    const heartCollisionType = 10;
+
+    drawHeart(5,5,2,heartCollisionType);
+
+    this.map.WorldState = function(world) {
+        this.load = () => {
+            world.addPlayer(1,1);
+        }
+        this.worldClicked = type => {
+            if(type === heartCollisionType) {
+                world.say("I love you, Raven. Vvvvvvvvvvvvvv much.");
+            }
+        }
+    }
 
     if(this.withLighting) {
         //generate lighting information?

@@ -40,28 +40,29 @@ function getMap(width,height,withLighting) {
     return map;
 }
 
+function defaultWorldLoad(startPosition,world) {
+    if(!startPosition) {
+        startPosition = {x:0,y:0};
+    }
+    if(!startPosition.d) {
+        startPosition.d = "down";
+    }
+    world.addPlayer(
+        startPosition.x,
+        startPosition.y,
+        startPosition.d
+    );
+    if(startPosition.xOffset) {
+        world.playerObject.xOffset = startPosition.xOffset;
+    }
+    if(startPosition.yOffset) {
+        world.playerObject.yOffset = startPosition.yOffset;
+    }
+}
+
 function getDefaultWorldState(generatorData) {
     return function() {
-        this.load = world => {
-            let startPosition = generatorData.startPosition;
-            if(!startPosition) {
-                startPosition = {x:0,y:0};
-            }
-            if(!startPosition.d) {
-                startPosition.d = "down";
-            }
-            world.addPlayer(
-                startPosition.x,
-                startPosition.y,
-                startPosition.d
-            );
-            if(startPosition.xOffset) {
-                world.playerObject.xOffset = startPosition.xOffset;
-            }
-            if(startPosition.yOffset) {
-                world.playerObject.yOffset = startPosition.yOffset;
-            }
-        }
+        this.load = defaultWorldLoad.bind(null,generatorData.startPosition);
     }
 }
 

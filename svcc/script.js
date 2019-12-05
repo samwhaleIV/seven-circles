@@ -53,3 +53,17 @@ setPageTitle("Seven Circles");
 setFaderDelay(0);
 setFaderDuration(musicFaderSafetyBuffer);
 setMusicFadeDuration(0);
+
+(function(){
+    const wasMuted = musicMuted || soundMuted;
+    if(musicMuted) {
+        setMusicVolume(0);
+    }
+    if(soundMuted) {
+        setSoundVolume(0);
+    }
+    if(wasMuted) {
+        saveVolumeChanges();
+    }
+})();
+restoreVolumeChanges();

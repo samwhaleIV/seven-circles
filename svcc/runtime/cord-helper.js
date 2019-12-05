@@ -1,10 +1,9 @@
 function applyGrid(
-    grid,layer,dim1,dim2,dim1check,dim2check,dim1min,dim2min,dim1max,dim2max,getIdx,translateIdx
+    grid,dim1,dim2,dim1check,dim2check,dim1min,dim2min,dim1max,dim2max,getIdx,translateIdx,setIdx
 ) {
     if(dim2 < dim2min || dim2 > dim2max) {
         return;
     }
-    grid = grid.tiles;
     const gridSize = grid.length;
 
     const dim1Start = Math.max(dim1min,dim1);
@@ -15,12 +14,14 @@ function applyGrid(
     for(let index = dim1Start;index<dim1End;index++) {
         const gridIndex = index + gridOffset;
         const layerIndex = translateIdx(startIndex,index);
-        layer[layerIndex] = grid[gridIndex];
+
+        const gridValue = grid[gridIndex];
+        setIdx(layerIndex,gridValue);
     }
 }
 
 function applyGrid2D(
-    x,y,grid,width,height,layer,bounds,getIdx
+    x,y,grid,width,height,bounds,getIdx,setIdx
 ) {
     const xStart = Math.max(bounds.left,x);
     const yStart = Math.max(bounds.top,y);
@@ -38,11 +39,49 @@ function applyGrid2D(
         const gridXIndex = xIndex + gridXOffset;
         const gridYIndex = yIndex + gridYOffset;
 
-        layer[layerIndex] = grid[gridXIndex][gridYIndex];
+        const gridValue = grid[gridXIndex][gridYIndex];
+        setIdx(layerIndex,gridValue);
     }}
 }
 
+const PASS_THROUGH = value => value;
+
+const gridApplicationFilters = {
+    None: [0,0,0,0],
+    All:  [1,1,1,1],
+
+    Background: [1,0,0,0],
+    Foreground: [0,1,0,0],
+    Collision:  [0,0,1,0],
+    Lighting:   [0,0,0,1],
+
+    BackgroundForeground: [1,1,0,0],
+    BackgroundCollision:  [1,0,1,0],
+    BackgroundLighting:   [1,0,0,1],
+
+    BackgroundForegroundCollision: [1,1,1,0],
+    BackgroundForegroundLighting:  [1,1,0,1],
+    BackgroundCollisionLighting:   [1,0,1,1],
+
+    CollisionLighting: [0,0,1,1],
+
+    ForegroundCollision: [0,1,1,0],
+    ForegroundLighting:  [0,1,0,1],
+    ForegroundCollisionLighting: [0,1,1,1],
+
+}
+Object.values(gridApplicationFilters).forEach(filterSet => {
+    filterSet.forEach((value,index) => {
+        if(value) {
+            filterSet[index] = PASS_THROUGH;
+        } else {
+            filterSet[index] = null;
+        }
+    });
+});
+
 function LayerHelper(layer,getIdx,getXY,bounds) {
+    const setFast = (index,value) => layer[index] = value;
     this.set = (x,y,value) => {
         layer[getIdx(x,y)] = value;
     }
@@ -57,19 +96,19 @@ function LayerHelper(layer,getIdx,getXY,bounds) {
         }
     }
     this.applyHorizontalGrid = (x,y,grid) => applyGrid(
-        grid,layer,x,y,0,y,
+        grid.tiles,x,y,0,y,
         bounds.left,bounds.top,bounds.right,bounds.bottom,
-        getIdx,(start,idx) => start+idx
+        getIdx,(start,idx) => start + idx,setFast
     );
     this.applyVerticalGrid = (x,y,grid) => applyGrid(
-        grid,layer,y,x,x,0,
+        grid.tiles,y,x,x,0,
         bounds.top,bounds.left,bounds.bottom,bounds.right,
-        getIdx,(start,idx) => start + idx * bounds.width
+        getIdx,(start,idx) => start + idx * bounds.width,setFast
     );
     this.applyGrid = (x,y,grid) => {
         return applyGrid2D(
             x,y,grid.tiles,grid.width,grid.height,
-            layer,bounds,getIdx
+            bounds,getIdx,setFast
         );
     }
 }
@@ -107,23 +146,48 @@ function CordHelper(map) {
     const layers = [
         this.background,this.foreground,this.collision
     ];
+    const dataLayers = [
+        baseData.background,
+        baseData.foreground,
+        baseData.collision
+    ];
     if(baseData.lighting) {
         this.lighting = new LayerHelper(
             baseData.lighting,getIdx
         );
         layers.push(this.lighting);
+        dataLayers.push(baseData.lighting);
     }
 
+    const layerCount = layers.length;
+
     const getLayerValues = (x,y) => {
-        const values = new Array(layers.length);
+        const values = new Array(layerCount);
         for(let i = 0;i<values.length;i++) {
             values[i] = layers[i].get(x,y);
         }
         return values;
     }
     const setLayerValues = (x,y,values) => {
-        for(let i = 0;i<layers.length;i++) {
+        const end = Math.min(values.length,data.length);
+        for(let i = 0;i<end;i++) {
             layers[i].set(x,y,values[i]);
+        }
+    }
+    const setLayerValuesFast = (index,values) => {
+        const end = Math.min(values.length,layerCount);
+        for(let i = 0;i<end;i++) {
+            dataLayers[i][index] = values[i];
+        }
+    }
+    const setLayerValuesFiltered = (filters,index,values) => {
+        const end = Math.min(values.length,layerCount,filters.length);
+        for(let i = 0;i<end;i++) {
+            const filter = filters[i];
+            if(filter) {
+                const layer = dataLayers[i];
+                layer[index] = filter.call(null,values[i],layer[index]);
+            }
         }
     }
 
@@ -143,5 +207,25 @@ function CordHelper(map) {
             setLayerValues(position.x,position.y,values);
         }
     }
+
+    this.applyHorizontalGrid = (x,y,grid,filters) => applyGrid(
+        grid.tiles,x,y,0,y,
+        bounds.left,bounds.top,bounds.right,bounds.bottom,
+        getIdx,(start,idx) => start+idx,
+        filters ? setLayerValuesFiltered.bind(null,filters) : setLayerValuesFast
+    );
+    this.applyVerticalGrid = (x,y,grid,filters) => applyGrid(
+        grid.tiles,y,x,x,0,
+        bounds.top,bounds.left,bounds.bottom,bounds.right,
+        getIdx,(start,idx) => start + idx * bounds.width,
+        filters ? setLayerValuesFiltered.bind(null,filters) : setLayerValuesFast
+    );
+    this.applyGrid = (x,y,grid,filters) => applyGrid2D(
+        x,y,grid.tiles,grid.width,grid.height,
+        bounds,getIdx,
+        filters ? setLayerValuesFiltered.bind(null,filters) : setLayerValuesFast
+    );
+    this.gridApplicationFilters = gridApplicationFilters;
 }
 export default CordHelper;
+export { CordHelper, PASS_THROUGH }
