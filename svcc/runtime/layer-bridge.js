@@ -1,4 +1,4 @@
-function MapStamp(layers,bridge) {
+function LayerBridge(layers,bridge) {
     const applyGridLayer = (
         x,y,gridLayer,collisionLayer,isForeground,method
     ) => {
@@ -100,4 +100,4 @@ function MapStamp(layers,bridge) {
     }
 
 }
-export default MapStamp;
+export default LayerBridge;

@@ -1,5 +1,5 @@
 import TileBridge from "../tile-bridge.js";
-import MapStamp from "../map-stamp.js";
+import LayerBridge from "../layer-bridge.js";
 
 const objects = {};
 const bridge = new TileBridge(objects);
@@ -24,35 +24,34 @@ bridge.addDynamicObject("floor",bridge.get9Grid,bridge.get9GridMeta(67));
 const COLLISION_BASIC = 1;
 const HEART_COLLISION = 10;
 
-
 function PinkPlace(layers) {
     this.map.backgroundColor = "white";
 
-    const mapStamp = new MapStamp(layers,bridge);
+    const layerBridge = new LayerBridge(layers,bridge);
 
     function drawFloor(cords) {
-        mapStamp.stampBackgroundDynamic(
+        layerBridge.stampBackgroundDynamic(
             "floor",...bridge.parameterize(cords)
         );
     }
     function drawHorizontalFence(cords) {
-        mapStamp.stampHorizontalForeground(
+        layerBridge.stampHorizontalForeground(
             "horizontal_fence",...bridge.parameterize(cords),COLLISION_BASIC
         );
     }
 
     function drawVerticalFence(cords) {
-        mapStamp.stampVerticalForeground(
+        layerBridge.stampVerticalForeground(
             "vertical_fence",...bridge.parameterize(cords),COLLISION_BASIC
         );
     }
 
     function drawCenterHeart(x,y,collisionType) {
-        mapStamp.stampForeground("center_heart",x,y,collisionType);
+        layerBridge.stampForeground("center_heart",x,y,collisionType);
     }
 
     function drawHeart(x,y,backgroundOffset) {
-        mapStamp.stampBackground("heart",x,y,HEART_COLLISION,backgroundOffset);
+        layerBridge.stampBackground("heart",x,y,HEART_COLLISION,backgroundOffset);
     }
 
     drawFloor({
