@@ -32,7 +32,9 @@ function TileBridge(objects) {
         twoDimensional: TWO_DIMENSIONAL_TYPE
     };
 
-    this.getObject = (width,height,fill) => {
+    this.get = name => objects[name];
+
+    this.getObject = (width,height,fill,xOffset=0,yOffset=0) => {
         if(typeof fill !== "function") {
             const fillValue = fill;
             fill = () => fillValue;
@@ -41,47 +43,18 @@ function TileBridge(objects) {
         for(let x = 0;x<width;x++) {
             const column = new Array(height);
             for(let y = 0;y<height;y++) {
-                column[y] = fill.call(null,x,y);
+                column[y] = fill.call(null,x+xOffset,y+yOffset);
             }
             tiles[x] = column;
         }
         const size = width * height;
-        let offsetX = 0;
-        let offsetY = 0;
-        function getOffset(x=0,y=0) {
-            offsetX += x;
-            offsetY += y;
-            x = offsetX;
-            y = offsetY;
-            return {
-                width: width,
-                height: height,
-                size: size,
-                type: DISCRETE_TYPE,
-                offset: getOffset,
-                tiles: (()=>{
-                    const newTiles = new Array(width);
-                    const difference = x + y * WorldTextureColumns;
-                    for(let x = 0;x<width;x++) {
-                        const column = new Array(height);
-                        const oldColumn = tiles[x];
-                        for(let y = 0;y<height;y++) {
-                            column[y] = oldColumn[y] + difference;
-                        }
-                        newTiles[x] = column;
-                    }
-
-                    return newTiles;
-                })()
-            }
-        }
         return {
             width: width,
             height: height,
             size: size,
             tiles: tiles,
             type: DISCRETE_TYPE,
-            offset: getOffset
+            offset: this.getObject.bind(null,width,height,fill)
         }
     }
 
@@ -249,7 +222,18 @@ function TileBridge(objects) {
         return newGrid;
     }
 
-    this.get3x3Grid = function(width,height) {
+    this.parameterize = cords => {
+        if(Array.isArray(cords)) {
+            return cords;
+        }
+        if(cords.length !== undefined) {
+            return [cords.x,cords.y,cords.length];
+        } else {
+            return [cords.x,cords.y,cords.width,cords.height];
+        }
+    }
+
+    this.get9Grid = function(width,height) {
         if(width < 3 || height < 3) {
             throw Error(NINE_GRID_SIZE_ERROR);
         }

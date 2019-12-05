@@ -225,7 +225,7 @@ function CordHelper(map) {
         bounds,getIdx,
         filters ? setLayerValuesFiltered.bind(null,filters) : setLayerValuesFast
     );
-    this.gridApplicationFilters = gridApplicationFilters;
+    this.filters = gridApplicationFilters;
 }
 export default CordHelper;
 export { CordHelper, PASS_THROUGH }
