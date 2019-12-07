@@ -226,11 +226,18 @@ function TileBridge(objects) {
         if(Array.isArray(cords)) {
             return cords;
         }
-        if(cords.length !== undefined) {
-            return [cords.x,cords.y,cords.length];
+        const newCords = [cords.x,cords.y];
+        if(cords.length) {
+            newCords.push(cords.length);
         } else {
-            return [cords.x,cords.y,cords.width,cords.height];
+            if(cords.width) {
+                newCords.push(cords.width);
+            }
+            if(cords.height) {
+                newCords.push(cords.height);
+            }
         }
+        return newCords;
     }
 
     this.get9Grid = function(width,height) {
