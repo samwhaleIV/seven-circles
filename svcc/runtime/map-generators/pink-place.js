@@ -12,6 +12,10 @@ bridge.addSmallObject("container",517);
 bridge.addSmallObject("door",641);
 bridge.add2x2Object("center_heart",260);
 
+bridge.addDynamicObject("checker_floor",bridge.getPattern,{
+    fill: (x,y) => (x+y) % 2 === 0 ? 2 : 3
+});
+
 bridge.addDynamicObject("horizontal_fence",bridge.get3Grid,
     {start:257,middle:258,end:259}
 );
@@ -101,6 +105,15 @@ function PinkPlace(layers) {
             collisionType: HEART_COLLISION
         });
     }
+
+    layerBridge.stamp({
+        name: "checker_floor",
+        width: this.map.width,
+        height: this.map.height,
+        toBackground: true,
+        x: 0,
+        y: 0
+    });
 
     drawFloor({
         x: 2, y: 2,

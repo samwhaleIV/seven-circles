@@ -4,7 +4,6 @@ const NO_INCLUDED_LAYERS = "No layers included stamp operation";
 const ONE_DIMENSIONAL_STAMP_BAD_OFFSET = "One dimensional stamps don't support x,y offset";
 const TWO_DIMENSIONAL_STAMP_BAD_OFFSET = "Two dimensional stamps don't support x,y offset";
 
-
 const defaultToZero = value => !isNaN(value) ? value : 0;
 
 function LayerBridge(layers,bridge) {
@@ -52,7 +51,7 @@ function LayerBridge(layers,bridge) {
                 return layers.lighting;
             }
         } else {
-            throw NO_INCLUDED_LAYERS;
+            throw Error(NO_INCLUDED_LAYERS);
         }
     };
     const tryReduceObjectToGrid = (object,xOffset,yOffset,parameters) => {
@@ -205,11 +204,10 @@ function LayerBridge(layers,bridge) {
     };
 
     this.stamp = ({
-        name,x,y,xOffset=0,yOffset=0,width,height,collisionType,
-        toBackground=false,toForeground=false,toLighting=false,
-        parameters
+        name,x,y,xOffset,yOffset,width,height,collisionType,
+        toBackground,toForeground,toLighting,parameters
     }) => {
-        const hasOffset = xOffset || yOffset;
+        const hasOffset = xOffset !== undefined || yOffset !== undefined;
         if(width && height) {
             if(hasOffset) {
                 throw Error(TWO_DIMENSIONAL_STAMP_BAD_OFFSET);

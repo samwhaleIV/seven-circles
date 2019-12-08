@@ -1,9 +1,10 @@
 function applyGrid(
     grid,dim1,dim2,dim1check,dim2check,dim1min,dim2min,dim1max,dim2max,getIdx,translateIdx,setIdx
 ) {
-    if(dim2 < dim2min || dim2 > dim2max) {
+    if(dim2 < dim2min || dim2 > dim2max + 1) {
         return;
     }
+
     const gridSize = grid.length;
 
     const dim1Start = Math.max(dim1min,dim1);
@@ -26,8 +27,11 @@ function applyGrid2D(
     const xStart = Math.max(bounds.left,x);
     const yStart = Math.max(bounds.top,y);
 
-    const xEnd = Math.min(bounds.right,x+width);
-    const yEnd = Math.min(bounds.bottom,y+height);
+    const maxX = bounds.right + 1;
+    const maxY = bounds.bottom + 1;
+
+    const xEnd = Math.min(maxX,x+width);
+    const yEnd = Math.min(maxY,y+height);
 
     const gridXOffset = bounds.left - x;
     const gridYOffset = bounds.top - y;
@@ -44,7 +48,9 @@ function applyGrid2D(
     }}
 }
 
-const PASS_THROUGH = value => value;
+const PASS_THROUGH = function() {
+    return this.newValue;
+}
 
 const gridApplicationFilters = {
     None: [0,0,0,0],
@@ -161,6 +167,8 @@ function CordHelper(map) {
 
     const layerCount = layers.length;
 
+    this.getLayer = ID => layers[ID];
+
     const getLayerValues = (x,y) => {
         const values = new Array(layerCount);
         for(let i = 0;i<values.length;i++) {
@@ -186,7 +194,16 @@ function CordHelper(map) {
             const filter = filters[i];
             if(filter) {
                 const layer = dataLayers[i];
-                layer[index] = filter.call(null,values[i],layer[index]);
+                const position = getXY(index);
+                layer[index] = filter.call({
+                    layerID: i,
+                    layer: layers[i],
+                    index: index,
+                    x: position.x,
+                    y: position.y,
+                    newValue: values[i],
+                    oldValue: layer[index]
+                });
             }
         }
     }
@@ -201,9 +218,11 @@ function CordHelper(map) {
             const values = getLayerValues(
                 position.x,position.y
             );
-            filter.call(
-                null,values,position.x,position.y
-            );
+            filter.call({
+                values: values,
+                x: position.x,
+                y: position.y
+            });
             setLayerValues(position.x,position.y,values);
         }
     }

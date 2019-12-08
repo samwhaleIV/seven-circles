@@ -11,8 +11,11 @@ function getMap(width,height,withLighting) {
     const upperYBound = height - 1;
     const tileCount = width * height;
     const map = {
-        rows: height,
         columns: width,
+        rows: height,
+        
+        width: width,
+        height: height,
 
         finalColumn: upperXBound,
         finalRow: upperYBound,

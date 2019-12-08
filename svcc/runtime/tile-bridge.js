@@ -15,7 +15,7 @@ const GRID_DIMENSION_MISMATCH = "Grid dimensions do not match, cannot combine gr
 const INVALID_GRID_GROUP = "A grid group cannot be made without valid arguments";
 
 const EMPTY_GRID = {
-    type: ONE_DIMENSIONAL_TYPE,
+    type: TWO_DIMENSIONAL_TYPE,
     width: 0,
     height: 0,
     size: 0,
@@ -34,7 +34,7 @@ function TileBridge(objects) {
 
     this.get = name => objects[name];
 
-    this.getObject = (width,height,fill,xOffset=0,yOffset=0) => {
+    const getObject = (width,height,fill,xOffset=0,yOffset=0) => {
         if(typeof fill !== "function") {
             const fillValue = fill;
             fill = () => fillValue;
@@ -56,6 +56,11 @@ function TileBridge(objects) {
             type: DISCRETE_TYPE,
             offset: this.getObject.bind(null,width,height,fill)
         }
+    }
+    this.getObject = getObject;
+
+    this.getPattern = function(width,height) {
+        return getObject(width,height,this.fill);
     }
 
     this.addObject = (name,index,width,height) => {
