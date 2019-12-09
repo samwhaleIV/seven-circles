@@ -15,7 +15,7 @@ function SVCCWorldRenderer(...parameters) {
     this.mapChanged = () => {
         //add the ui layer when the map updates
         this.addCustomRenderer({render:function(){
-            drawTextWhite("yeet",50,50,LargeTextScale);
+            //drawTextWhite("yeet",50,50,LargeTextScale);
         }});
     }
 

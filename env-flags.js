@@ -6,5 +6,5 @@ const ENV_FLAGS = {
     NO_CONTEXT_MENU: true,
     STATIC_BACKGROUND: true,
     ENABLE_F_BUTTONS: true,
-    DEBUG_MAP: "pink-place"
+    DEBUG_MAP: "water-test"
 };
