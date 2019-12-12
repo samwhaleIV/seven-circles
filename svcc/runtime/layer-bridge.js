@@ -4,6 +4,8 @@ const NO_INCLUDED_LAYERS = "No layers included stamp operation";
 const ONE_DIMENSIONAL_STAMP_BAD_OFFSET = "One dimensional stamps don't support x,y offset";
 const TWO_DIMENSIONAL_STAMP_BAD_OFFSET = "Two dimensional stamps don't support x,y offset";
 
+const NAME_AND_OBJECT_CONFLICT = "Cannot provide an object name with an object";
+
 const defaultToZero = value => !isNaN(value) ? value : 0;
 
 function LayerBridge(layers,bridge) {
@@ -90,7 +92,12 @@ function LayerBridge(layers,bridge) {
     const generateGridLayer = (
         name,oneDimensional,length,xOffset,yOffset,parameters
     ) => {
-        const object = bridge.get(name);
+        let object;
+        if(typeof name === "object") {
+            object = name;
+        } else {
+            object = bridge.get(name);
+        }
         if(!object) {
             throw Error(`Object '${name}' does not exist in tile bridge`);
         }
@@ -205,8 +212,13 @@ function LayerBridge(layers,bridge) {
 
     this.stamp = ({
         name,x,y,xOffset,yOffset,width,height,collisionType,
-        toBackground,toForeground,toLighting,parameters
+        toBackground,toForeground,toLighting,parameters,object
     }) => {
+        if(!name && object) {
+            name = object;
+        } else if(name && object) {
+            throw Error(NAME_AND_OBJECT_CONFLICT);
+        }
         const hasOffset = xOffset !== undefined || yOffset !== undefined;
         if(width && height) {
             if(hasOffset) {

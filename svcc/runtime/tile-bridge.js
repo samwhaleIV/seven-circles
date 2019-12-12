@@ -245,6 +245,318 @@ function TileBridge(objects) {
         return newCords;
     }
 
+    const getArea9 = (array2D,x,y) => {
+
+        const column1 = array2D[x-1];
+        const column3 = array2D[x+1];
+        const column2 = array2D[x];
+
+        const height = column2.length;
+
+        const row1 = y > 0 ? 1 : 0;
+        const row3 = y <= height ? 1 : 0;
+
+        return [
+            column1 ? row1 ? column1[y-1] : 0 : 0,
+            row1 ? column2[y-1] : 0,
+            column3 ? row1 ? column3[y-1] : 0 : 0,
+
+            column1 ? column1[y] : 0,
+            column2[y],
+            column3 ? column3[y] : 0,
+
+            column1 ? row3 ? column1[y+1] : 0 : 0,
+            row3 ? column2[y+1] : 0,
+            column3 ? row3 ? column3[y+1] : 0 : 0
+        ];
+    }
+
+    const islandType = 1;
+    const pathType = 2;
+
+    const middle = 4;
+    const left = 3;
+    const right = 5;
+    const top = 1;
+    const bottom = 7;
+
+    const topLeft = 0;
+    const topRight = 2;
+    const bottomLeft = 6;
+    const bottomRight = 8;
+
+    const top_path = 101;
+    const bottom_path = 102;
+    const left_path = 103;
+    const right_path = 104;
+
+    const isTopLeftCorner = area9 => {
+        return !area9[left] && !area9[top] && area9[bottom] && area9[right];
+    }
+    const isTopRightCorner = area9 => {
+        return area9[left] && !area9[top] && area9[bottom] && !area9[right];
+    }
+    const isBottomLeftCorner = area9 => {
+        return !area9[left] && area9[top] && !area9[bottom] && area9[right];
+    }
+    const isBottomRightCorner = area9 => {
+        return area9[left] && area9[top] && !area9[bottom] && !area9[right];
+    }
+
+    const getCornerType = area9 => {
+        if(isTopLeftCorner(area9)) {
+            return "topLeft";
+        } else if(isTopRightCorner(area9)) {
+            return "topRight";
+        } else if(isBottomLeftCorner(area9)) {
+            return "bottomLeft";
+        } else if(isBottomRightCorner(area9)) {
+            return "bottomRight";
+        } else {
+            return null;
+        }
+    }
+
+    const isInverseTopLeft = area9 => {
+        return area9[left] && area9[top] && !area9[topLeft];
+    }
+    const isInverseTopRight = area9 => {
+        return area9[right] && area9[top] && !area9[topRight];
+    }
+    const isInverseBottomLeft = area9 => {
+        return area9[left] && area9[bottom] && !area9[bottomLeft];
+    }
+    const isInverseBottomRight = area9 => {
+        return area9[right] && area9[bottom] && !area9[bottomRight];
+    }
+
+    const getInverseCornerType = area9 => {
+        if(isInverseTopLeft(area9)) {
+            return "inverseTopLeft";
+        } else if(isInverseTopRight(area9)) {
+            return "inverseTopRight";
+        } else if(isInverseBottomLeft(area9)) {
+            return "inverseBottomLeft";
+        } else if(isInverseBottomRight(area9)) {
+            return "inverseBottomRight";
+        } else {
+            return null;
+        }
+    }
+
+
+    const isLeftSide = area9 => {
+        const l = !area9[left] ? true : false;
+        const t = area9[top]? true : false;
+        const b = area9[bottom]? true : false;
+        const r = area9[right]? true : false;
+        return l && t && b && r;
+        //return !area9[left] && area9[top] && area9[bottom] && area9[right];
+    }
+    const isRightSide = area9 => {
+        return area9[left] && area9[top] && area9[bottom] && !area9[right];
+    }
+    const isTopSide = area9 => {
+        return area9[left] && !area9[top] && area9[bottom] && area9[right];
+    }
+    const isBottomSide = area9 => {
+        return area9[left] && area9[top] && !area9[bottom] && area9[right];
+    }
+
+    const getSideType = area9 => {
+        if(isLeftSide(area9)) {
+            return "left";
+        } else if(isRightSide(area9)) {
+            return "right";
+        } else if(isTopSide(area9)) {
+            return "top";
+        } else if(isBottomSide(area9)) {
+            return "bottom";
+        } else {
+            return null;
+        }
+    }
+
+    const processIslandGridType = area9 => {
+        if(area9[top] === pathType) {
+            return top_path;
+        } else if(area9[bottom] === pathType) {
+            return bottom_path;
+        } else if(area9[left] === pathType) {
+            return left_path;
+        } else if(area9[right] === pathType) {
+            return right_path;
+        }
+
+        const sideType = getSideType(area9);
+        if(sideType !== null) {
+            return sideType;
+        }
+
+        const inverseCornerType = getInverseCornerType(area9);
+        if(inverseCornerType !== null) {
+            return inverseCornerType;
+        }
+
+        const cornerType = getCornerType(area9);
+        if(cornerType !== null) {
+            return cornerType;
+        }
+
+        return "middle";
+    }
+
+    this.getIslandGrid = function(width,height,generationData) {
+        const grid = new Array(width);
+
+        for(let x = 0;x<width;x++) {
+            grid[x] = new Array(height).fill(0);
+
+            for(let y = 0;y<height;y++) {
+        
+                const area9 = getArea9(
+                    generationData,x,y
+                );
+                const generationValue = area9[middle];
+
+                let targetValue = null;
+                switch(generationValue) {
+                    default: case 0: break;
+                    case islandType:
+                        targetValue = this[
+                            processIslandGridType(area9)
+                        ];
+                        break;
+                    case pathType:
+                        targetValue = this.path.get(
+                            area9[left],area9[right],
+                            area9[top],area9[bottom]
+                        );
+                        break;
+                }
+                if(targetValue !== null) {
+                    grid[x][y] = targetValue;
+                }
+            }
+        }
+
+        for(let x = 0;x<width;x++) {
+        for(let y = 0;y<height;y++) {
+            const area9 = getArea9(
+                grid,x,y
+            );
+            const generationValue = area9[middle];
+
+            if(generationValue === this.top) {
+                if(area9[right] === this.bottom) {
+                    grid[x][y] = this.edgeTopBottom;
+                    grid[x+1][y] = this.edgeTopBottom + 1;
+                }
+            } else if(generationValue === this.bottom) {
+                if(area9[right] === this.top) {
+                    grid[x][y] = this.edgeBottomTop;
+                    grid[x+1][y] = this.edgeBottomTop + 1;
+                }
+            } else if(generationValue === this.right) {
+                if(area9[bottom] === this.left) {
+                    grid[x][y] = this.edgeRightLeft
+                    grid[x][y+1] = this.edgeRightLeft + 1;
+                }
+            } else if(generationValue === this.left) {
+                if(area9[bottom] === this.right) {
+                    grid[x][y] = this.edgeLeftRight;
+                    grid[x][y+1] = this.edgeLeftRight + 1;
+                }
+            }
+        }}
+
+        return {
+            type: TWO_DIMENSIONAL_TYPE,
+            width: width,
+            height: height,
+            size: width * height,
+            tiles: grid
+        };
+
+    }
+    this.getIslandGridMeta = function(
+        nineGridIdx,nineGridCornerIdx,pathGridIdx
+    ) {
+        const metadata = this.get9GridMeta(nineGridIdx);
+
+        const row4Start = nineGridCornerIdx;
+        const row5Start = nineGridCornerIdx + WorldTextureColumns;
+
+        metadata.inverseTopLeft = row4Start;
+        metadata.inverseTopRight = row4Start + 1;
+        metadata.inverseBottomLeft = row5Start;
+        metadata.inverseBottomRight = row5Start + 1;
+
+        const pathRow1 = pathGridIdx;
+        const pathRow2 = pathGridIdx + WorldTextureColumns;
+        const pathRow3 = pathGridIdx + WorldTextureColumns * 2;
+
+       const edgeRow1 = nineGridCornerIdx + WorldTextureColumns * 2;
+       const edgeRow2 = nineGridCornerIdx + WorldTextureColumns * 3;
+       const edgeRow3 = nineGridCornerIdx + WorldTextureColumns * 4;
+       const edgeRow4 = nineGridCornerIdx + WorldTextureColumns * 5;
+
+        const path = {    
+            /* Root count is 11 because:
+
+                (16) minus (4 dead ends)
+                minus (1 all closed) equals (11)
+            */
+            LeftRightBottom: pathRow1, //1101
+            LeftRightTop: pathRow1 + 1, //1110
+
+            RightTopBottom: pathRow2, //1011
+            LeftTopBottom: pathRow2 + 1, //0111
+    
+            TopBottom: pathRow2 + 2, //0011
+            LeftRight: pathRow3 + 1, //1100
+
+            LeftRightTopBottom: pathRow3 + 2, //1111
+
+            RightBottom: pathRow3 + 3, //0101
+            LeftBottom: pathRow1 + 4, //1001
+            LeftTop: pathRow2 + 4, //1010
+            RightTop: pathRow3 + 4, //0110
+        }
+        
+        metadata.edgeTopBottom = edgeRow1;
+        metadata.edgeBottomTop = edgeRow2;
+
+        metadata.edgeRightLeft = edgeRow3;
+        metadata.edgeLeftRight = edgeRow4;
+
+        path[top_path] = pathRow1 + 3;
+        path[bottom_path] = pathRow1 + 2;
+        path[left_path] = pathRow2 + 3;
+        path[right_path] = pathRow3;
+
+
+        const getHash = (left,right,top,bottom) => {
+            let string = "";
+            if(left) string += "Left";
+            if(right) string += "Right";
+            if(top) string += "Top";
+            if(bottom) string += "Bottom";
+            if(!string) {
+                return "LeftRightTopBottom";
+            }
+            return string;
+        }
+
+        path.get = (left,right,top,bottom) => {
+            const hash = getHash(left,right,top,bottom);
+            return path[hash];
+        }
+        metadata.path = path;
+
+        return metadata;
+    }
+
     this.get9Grid = function(width,height) {
         if(width < 3 || height < 3) {
             throw Error(NINE_GRID_SIZE_ERROR);
