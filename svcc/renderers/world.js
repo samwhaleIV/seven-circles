@@ -13,8 +13,11 @@ function SVCCWorldRenderer(...parameters) {
     }
 
     this.mapChanged = () => {
+        this.playerObject.renderYOffset = 0.1;
         //add the ui layer when the map updates
         this.addCustomRenderer({render:function(){
+            drawTextBlack(String(rendererState.cameraResolveX),5,5,4);
+            drawTextBlack(String(rendererState.cameraResolveY),5,35,4);
             //drawTextWhite("yeet",50,50,LargeTextScale);
         }});
     }

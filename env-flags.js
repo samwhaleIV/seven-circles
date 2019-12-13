@@ -3,7 +3,7 @@ const ENV_FLAGS = {
     DEBUG: true,
     CONTROLLER_DISABLED: false,
     DO_STEAM_SETUP: false,
-    NO_CONTEXT_MENU: true,
+    NO_CONTEXT_MENU: false,
     STATIC_BACKGROUND: true,
     ENABLE_F_BUTTONS: true,
     DEBUG_MAP: "water-test"

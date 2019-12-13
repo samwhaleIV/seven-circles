@@ -1,9 +1,12 @@
+"use strict";
+
 const defaultSettings = {
     minWidth: 3,
     minHeight: 3,
     maxWidth: 5,
     maxHeight: 4,
-    fill: 0.9
+    fill: 0.9,
+    pathFill: 1
 };
 
 const tileTypes = {
@@ -18,11 +21,6 @@ function applyDefaults(settings,defaultSettings) {
             settings[key] = value;
         }
     });
-}
-
-function GetIslandSettings(settings=defaultSettings) {
-    applyDefaults(settings,defaultSettings);
-    return settings;
 }
 
 const middle = 4;
@@ -230,12 +228,207 @@ const processGenerationValue = (target,generationValue,area9) => {
     }
 }
 
+const randomMinMax = (min,max) => {
+    const difference = max - min + 1;
+    return Math.floor(Math.random() * difference) + min;
+}
+
+const getIslands = (settings,islandWidth,islandHeight) => {
+    let fillTiles = Math.ceil(islandWidth * islandHeight * settings.fill);
+
+    const islands = [];
+
+    while(fillTiles >= 1) {
+        const width = randomMinMax(
+            settings.minWidth,
+            settings.maxWidth
+        );
+        const height = randomMinMax(
+            settings.minHeight,
+            settings.maxHeight
+        );
+        const tiles = width * height;
+
+        islands.push({
+            width: width,
+            height: height
+        });
+
+        fillTiles -= tiles;
+    }
+
+    return islands;
+}
+
+const placeIslands = (grid,islands,x,y,xRange,yRange) => {
+    for(let i = 0;i<islands.length;i++) {
+        const island = islands[i];
+        const islandWidth = island.width;
+        const islandHeight = island.height;
+
+        const islandX = randomMinMax(
+            x,Math.max(xRange-islandWidth,x)
+        );
+        const islandY = randomMinMax(
+            y,Math.max(yRange-islandHeight,y)
+        );
+        for(let x = 0;x<islandWidth;x++) {
+            const column = grid[x+islandX];
+            for(let y = 0;y<islandHeight;y++) {
+                column[y+islandY] = tileTypes.island;
+            }
+        }
+    }
+}
+
+const isVerticalPathStart = area9 => {
+    return area9[middle] === tileTypes.island &&
+    area9[left] === tileTypes.island &&
+    area9[right] === tileTypes.island &&
+    !area9[bottomLeft] &&
+    !area9[bottomRight] &&
+    !area9[bottom];
+}
+const isVerticalPathEnd = area9 => {
+    return area9[bottom] === tileTypes.island &&
+    area9[bottomLeft] === tileTypes.island &&
+    area9[bottomRight] === tileTypes.island;
+}
+
+const isHorizontalPathStart = area9 => {
+    return area9[middle] === tileTypes.island &&
+    area9[top] === tileTypes.island &&
+    area9[bottom] === tileTypes.island &&
+    !area9[right] &&
+    !area9[topRight] &&
+    !area9[bottomRight];
+}
+const isHorizontalPathEnd = area9 => {
+    return area9[right] === tileTypes.island &&
+    area9[topRight] === tileTypes.island &&
+    area9[bottomRight] === tileTypes.island;
+}
+
+const isEmptyRow = area9 => {
+    return area9[middle] === tileTypes.nothing &&
+    area9[left] === tileTypes.nothing &&
+    area9[right] === tileTypes.nothing;
+}
+const isEmptyColumn = area9 => {
+    return area9[middle] === tileTypes.nothing &&
+    area9[top] === tileTypes.nothing &&
+    area9[bottom] === tileTypes.nothing;
+}
+
+const getPathsIterate = (x,y,info) => {
+    const area9 = getArea9(info.grid,x,y);
+    if(info.pathing) {
+        if(info.isSegment(area9)) {
+            info.pathBuffer.push({
+                x: x,
+                y: y
+            });
+            if(info.isEnd(area9)) {
+                info.pathing = false;
+                info.paths.push(info.pathBuffer.splice(0));
+            }
+        } else {
+            info.pathBuffer.splice(0);
+            info.pathing = false;
+        }
+    } else {
+        if(info.isStart(area9)) {
+            info.pathing = true;
+        }
+    }
+}
+const getPathIterateInfo = () => {
+    return {
+        paths: [],
+        pathBuffer: [],
+        pathing: false
+    };
+}
+const getVerticalPaths = (grid,islandWidth,islandHeight) => {
+    const info = getPathIterateInfo();
+    info.grid = grid;
+    info.isStart = isVerticalPathStart;
+    info.isEnd = isVerticalPathEnd;
+    info.isSegment = isEmptyRow;
+    for(let x = 0;x<islandWidth;x+=2) {
+        for(let y = 0;y<islandHeight;y++) {
+            getPathsIterate(x,y,info);
+        }
+        info.pathing = false;
+        info.pathBuffer.splice(0);
+    }
+    return info.paths;
+}
+const getHorizontalPaths = (grid,islandWidth,islandHeight) => {
+    const info = getPathIterateInfo();
+    info.grid = grid;
+    info.isStart = isHorizontalPathStart;
+    info.isEnd = isHorizontalPathEnd;
+    info.isSegment=  isEmptyColumn;
+    for(let y = 0;y<islandHeight;y+=2) {
+        for(let x = 0;x<islandWidth;x++) {
+            getPathsIterate(x,y,info);
+        }
+        info.pathing = false;
+        info.pathBuffer.splice(0);
+    }
+    return info.paths;
+}
+
+const getPaths = (grid,islandWidth,islandHeight) => {
+    const horizontalPaths = getHorizontalPaths(
+        grid,islandWidth,islandHeight
+    );
+    const verticalPaths = getVerticalPaths(
+        grid,islandWidth,islandHeight
+    );
+    const allPaths = horizontalPaths.concat(verticalPaths);
+    return allPaths;
+}
+
+const removeRandomEntry = list => {
+    return list.splice(Math.floor(Math.random()*list.length),1)[0];
+}
+
+const makePaths = (
+    grid,settings,islandWidth,islandHeight
+) => {
+    const paths = getPaths(grid,islandWidth,islandHeight);
+    let pathCount = Math.round(settings.pathFill * paths.length);
+    while(pathCount > 0) {
+        const path = removeRandomEntry(paths);
+        for(let i = 0;i<path.length;i++) {
+            const pathPosition = path[i];
+            grid[pathPosition.x][pathPosition.y] = tileTypes.pathway;
+        }
+        pathCount--;
+    }
+}
+
+const makeIslands = (
+    grid,settings,islandWidth,islandHeight
+) => {
+    const islands = getIslands(
+        settings,islandWidth,islandHeight
+    );
+    placeIslands(
+        grid,islands,0,0,
+        islandWidth,islandHeight
+    );
+    makePaths(
+        grid,settings,islandWidth,islandHeight
+    );
+}
+
 function IslandMaker({layerBridge,width,height,settings}) {
+
     const islandWidth = width;
     const islandHeight = height;
-    if(!settings) {
-        settings = GetIslandSettings();
-    }
     settings.minWidth = Math.max(settings.minWidth,3);
     settings.minHeight = Math.max(settings.minHeight,3);
 
@@ -243,6 +436,10 @@ function IslandMaker({layerBridge,width,height,settings}) {
         applyDefaults(newSettings,defaultSettings);
         settings = newSettings;
     }
+    if(!settings) {
+        settings = {};
+    }
+    applyDefaults(settings,defaultSettings);
 
     const grid = new Array(islandWidth);
     for(let x = 0;x<islandWidth;x++) {
@@ -255,77 +452,15 @@ function IslandMaker({layerBridge,width,height,settings}) {
         }
     }
 
-    const randomMinMax = (min,max) => {
-        const difference = max - min + 1;
-        return Math.floor(Math.random() * difference) + min;
-    }
-
-    const getIslands = () => {
-        let fillTiles = Math.ceil(islandWidth * islandHeight * settings.fill);
-
-        const islands = [];
-
-        while(fillTiles >= 1) {
-            const width = randomMinMax(
-                settings.minWidth,
-                settings.maxWidth
-            );
-            const height = randomMinMax(
-                settings.minHeight,
-                settings.maxHeight
-            );
-            const tiles = width * height;
-
-            islands.push({
-                width: width,
-                height: height
-            });
-
-            fillTiles -= tiles;
-        }
-
-        return islands;
-    }
-
-    const placeIslands = (islands,x,y,xRange,yRange) => {
-        for(let i = 0;i<islands.length;i++) {
-            const island = islands[i];
-            const islandWidth = island.width;
-            const islandHeight = island.height;
-
-            const islandX = randomMinMax(
-                x,Math.max(xRange-islandWidth,x)
-            );
-            const islandY = randomMinMax(
-                y,Math.max(yRange-islandHeight,y)
-            );
-            for(let x = 0;x<islandWidth;x++) {
-                const column = grid[x+islandX];
-                for(let y = 0;y<islandHeight;y++) {
-                    column[y+islandY] = tileTypes.island;
-                }
-            }
-        }
-    }
-
-    const makePaths = islands => {
-        //todo
-    }
-
-    const makeIslands = () => {
-        const islands = getIslands();
-        placeIslands(
-            islands,0,0,islandWidth,islandHeight
-        );
-        makePaths(islands);
-    }
-
     this.generateGrid = newSettings => {
         if(newSettings) {
             updateSettings(newSettings);
         }
         clearGrid();
-        makeIslands();
+        makeIslands(
+            grid,settings,
+            islandWidth,islandHeight
+        );
     }
 
     this.paint = ({
@@ -346,7 +481,6 @@ function IslandMaker({layerBridge,width,height,settings}) {
         })
     }
 }
-IslandMaker.getSettings = GetIslandSettings;
 function getGrid(width,height,generationData) {
     const grid = new Array(width);
 
@@ -443,10 +577,10 @@ function getGridMeta(
     metadata.edgeRightLeft = edgeRow3;
     metadata.edgeLeftRight = edgeRow4;
 
-    path[top_path] = pathRow1 + 3;
-    path[bottom_path] = pathRow1 + 2;
-    path[left_path] = pathRow2 + 3;
-    path[right_path] = pathRow3;
+    metadata[top_path] = pathRow1 + 3;
+    metadata[bottom_path] = pathRow1 + 2;
+    metadata[left_path] = pathRow2 + 3;
+    metadata[right_path] = pathRow3;
 
     path.get = (left,right,top,bottom) => path[
         getLRTBHash(left,right,top,bottom)

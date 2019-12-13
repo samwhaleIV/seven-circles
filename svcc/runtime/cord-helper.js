@@ -177,7 +177,7 @@ function CordHelper(map) {
         return values;
     }
     const setLayerValues = (x,y,values) => {
-        const end = Math.min(values.length,data.length);
+        const end = Math.min(values.length,layerCount);
         for(let i = 0;i<end;i++) {
             layers[i].set(x,y,values[i]);
         }
@@ -218,7 +218,7 @@ function CordHelper(map) {
             const values = getLayerValues(
                 position.x,position.y
             );
-            filter.call({
+            filter.call(null,{
                 values: values,
                 x: position.x,
                 y: position.y

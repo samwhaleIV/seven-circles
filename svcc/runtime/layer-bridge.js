@@ -5,6 +5,7 @@ const ONE_DIMENSIONAL_STAMP_BAD_OFFSET = "One dimensional stamps don't support x
 const TWO_DIMENSIONAL_STAMP_BAD_OFFSET = "Two dimensional stamps don't support x,y offset";
 
 const NAME_AND_OBJECT_CONFLICT = "Cannot provide an object name with an object";
+const INVALID_STAMP_LOCATION = "X or Y is invalid for this stamp operation";
 
 const defaultToZero = value => !isNaN(value) ? value : 0;
 
@@ -214,6 +215,9 @@ function LayerBridge(layers,bridge) {
         name,x,y,xOffset,yOffset,width,height,collisionType,
         toBackground,toForeground,toLighting,parameters,object
     }) => {
+        if(isNaN(x) && isNaN(y)) {
+            throw Error(INVALID_STAMP_LOCATION);
+        }
         if(!name && object) {
             name = object;
         } else if(name && object) {

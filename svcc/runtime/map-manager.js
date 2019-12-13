@@ -1,7 +1,7 @@
 const worldMaps = {};
 
 /*
-    What? Were you expecting something big and fancy that warranted this sole file for what is merely a lookup table?
+    What? Were you expecting something big and fancy that warranted an entire file for what is merely a lookup table?
 */
 
 function addMap(name,map) {
