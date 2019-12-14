@@ -13,7 +13,7 @@ function SVCCWorldRenderer(...parameters) {
     }
 
     this.mapChanged = () => {
-        this.playerObject.renderYOffset = 0.1;
+        this.playerObject.renderYOffset = -0.1;
         this.playerObject.tilesPerSecond = 3.5;
         //add the ui layer when the map updates
         this.addCustomRenderer({render:function(){
