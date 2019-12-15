@@ -250,6 +250,16 @@ function TileBridge(objects) {
         return newCords;
     }
 
+    this.getRandom = function() {
+        const randomIndex = Math.floor(
+            Math.random()*this.tiles.length
+        );
+        const tileIndex = this.tiles[randomIndex];
+        return getObject(
+            this.width,this.height,tileIndex
+        );
+    }
+
     this.get9Grid = function(width,height) {
         if(width < 3 || height < 3) {
             throw Error(NINE_GRID_SIZE_ERROR);

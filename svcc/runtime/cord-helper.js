@@ -1,3 +1,10 @@
+const LAYER_NAMES = [
+    "background",
+    "foreground",
+    "collision",
+    "lighting"
+];
+
 function applyGrid(
     grid,dim1,dim2,dim1check,dim2check,dim1min,dim2min,dim1max,dim2max,getIdx,translateIdx,setIdx
 ) {
@@ -94,11 +101,23 @@ function LayerHelper(layer,getIdx,getXY,bounds) {
     this.get = (x,y) => {
         return layer[getIdx(x,y)];
     }
+    let remapIndex;
+    const remapHelper = {
+        get value() {
+            return layer[remapIndex];
+        },
+        set value(value) {
+            layer[remapIndex] = value;
+            return value;
+        }
+    };
     this.remap = filter => {
         for(let i = 0;i<layer.length;i++) {
-            const value = layer[i];
             const position = getXY(i);
-            layer[i] = filter(position.x,position.y,value);
+            remapHelper.x = position.x;
+            remapHelper.y = position.y;
+            remapIndex = i;
+            layer[i] = filter.call(null,remapHelper);
         }
     }
     this.applyHorizontalGrid = (x,y,grid) => applyGrid(
@@ -169,19 +188,6 @@ function CordHelper(map) {
 
     this.getLayer = ID => layers[ID];
 
-    const getLayerValues = (x,y) => {
-        const values = new Array(layerCount);
-        for(let i = 0;i<values.length;i++) {
-            values[i] = layers[i].get(x,y);
-        }
-        return values;
-    }
-    const setLayerValues = (x,y,values) => {
-        const end = Math.min(values.length,layerCount);
-        for(let i = 0;i<end;i++) {
-            layers[i].set(x,y,values[i]);
-        }
-    }
     const setLayerValuesFast = (index,values) => {
         const end = Math.min(values.length,layerCount);
         for(let i = 0;i<end;i++) {
@@ -208,22 +214,39 @@ function CordHelper(map) {
         }
     }
 
-    this.get = (x,y) => getLayerValues(x,y);
-    this.set = (x,y,values) => setLayerValues(x,y,values);
+    let helperX, helperY;
+    const remapHelper = {
+        get x() {
+            return helperX;
+        },
+        get y() {
+            return helperY;
+        }
+    };
+    for(let i = 0;i<layerCount;i++) {
+        const layer = layers[i];
+        const layerName = LAYER_NAMES[i];
+        layer.name = layerName;
+        (function(layer) {
+            Object.defineProperty(remapHelper,layer.name,{
+                get: function() {
+                    return layer.get(helperX,helperY);
+                },
+                set: function(value) {
+                    layer.set(helperX,helperY,value);
+                    return value;
+                }
+            })
+        })(layer);
+    }
 
     this.remap = filter => {
         const length = baseData.background.length;
         for(let i = 0;i<length;i++) {
             const position = getXY(i);
-            const values = getLayerValues(
-                position.x,position.y
-            );
-            filter.call(null,{
-                values: values,
-                x: position.x,
-                y: position.y
-            });
-            setLayerValues(position.x,position.y,values);
+            helperX = position.x;
+            helperY = position.y;
+            filter.call(null,remapHelper);
         }
     }
 

@@ -10,6 +10,10 @@ const INVALID_STAMP_LOCATION = "X or Y is invalid for this stamp operation";
 const defaultToZero = value => !isNaN(value) ? value : 0;
 
 function LayerBridge(layers,bridge) {
+
+    Object.defineProperty(this,"layers",{get:function(){return layers}});
+    Object.defineProperty(this,"bridge",{get:function(){return bridge}});
+
     const getGridGroup = (gridLayer,...layers) => {
         const gridGroup = bridge.getGridGroup(layers.map(layer => {
             if(layer) {

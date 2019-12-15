@@ -5,7 +5,7 @@ function SVCCWorldRenderer(...parameters) {
     this.setTilesetImage("world-tileset");
 
     this.escapeMenuDisabled = true;
-    this.forcedRenderScale = 1;
+    this.forcedRenderScale = 1.25;
 
     this.loadLastMapOrDefault = () => {
         this.updateMap(ENV_FLAGS.DEBUG_MAP);
@@ -17,8 +17,8 @@ function SVCCWorldRenderer(...parameters) {
         this.playerObject.tilesPerSecond = 3.5;
         //add the ui layer when the map updates
         this.addCustomRenderer({render:function(){
-            drawTextBlack(`cam. resolve x: ${rendererState.cameraResolveX}`,5,5,4);
-            drawTextBlack(`cam. resolve y: ${rendererState.cameraResolveY}`,5,30,4);
+            //drawTextBlack(`cam. resolve x: ${rendererState.cameraResolveX}`,5,5,4);
+            //drawTextBlack(`cam. resolve y: ${rendererState.cameraResolveY}`,5,30,4);
         }});
     }
 

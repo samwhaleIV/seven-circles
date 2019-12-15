@@ -6,7 +6,7 @@ const ENV_FLAGS = {
     NO_CONTEXT_MENU: false,
     STATIC_BACKGROUND: true,
     ENABLE_F_BUTTONS: true,
-    DEBUG_MAP: "water-test",
+    DEBUG_MAP: "water-place",
     DEBUG_PLAYER_CONVOY: false,
     CONVOY_TRACE: false
 };
