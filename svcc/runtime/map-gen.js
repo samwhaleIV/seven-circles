@@ -87,23 +87,39 @@ function getRandomNoiseMap(width,height,start=1,length=4) {
             yOffset: 0.5,
             d: "down"
         }
-    })
+    });
     return map;
+}
+
+function getStartPosition() {
+    let position;
+    this.iterate(data=>{
+        if(!data.collision) {
+            position = {
+                x: data.x,
+                y: data.y
+            };
+            return this.iterate.stop;
+        }
+    });
+    return position ? position : {x:0,y:0};
 }
 
 function procedurallyGenerate(
     width,height,generator,withLighting,...parameters
 ) {
     const map = getMap(width,height,withLighting);
+    const layers = new CordHelper(map);
     const generatorData = {
         map: map,
         width: width,
         height: height,
-        withLighting: withLighting
+        withLighting: withLighting,
+        getStartPosition: getStartPosition.bind(layers)
     };
     generator.call(
         generatorData,
-        new CordHelper(map),
+        layers,
         ...parameters
     );
     if(!map.WorldState) {

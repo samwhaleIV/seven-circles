@@ -15,9 +15,6 @@ bridge.addDynamicObject(
     bridge.getIslandGridMeta(454,646,393)
 );
 
-const BALL_COLLISION = 8;
-const ISLAND_GROUND = 519;
-
 bridge.addDynamicObject(
     "beach_ball",
     bridge.getRandom,{
@@ -29,19 +26,8 @@ bridge.addDynamicObject(
     }
 );
 
-function getStartPosition(layers,width,height) {
-    let position;
-    layers.iterate(data=>{
-        if(!data.collision) {
-            position = {
-                x: data.x,
-                y: data.y
-            };
-            return layers.iterate.stop;
-        }
-    });
-    return position ? position : {x:0,y:0};
-}
+const BALL_COLLISION = 8;
+const ISLAND_GROUND = 519;
 
 function WaterPlace(layers) {
 
@@ -79,10 +65,7 @@ function WaterPlace(layers) {
         }
     });
 
-    const startPosition = getStartPosition(
-        layers,this.map.width,this.map.height
-    );
-
+    const startPosition = this.getStartPosition();
     this.map.WorldState = function(world) {
         this.load = () => {
             world.addPlayer(startPosition.x,startPosition.y);
