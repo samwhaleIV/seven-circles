@@ -55,11 +55,11 @@ const LOGIC_BINDS = Object.entries({
     "LessThanOrEqualTo": lessOrEqual
 });
 
-function installLogic(target,installer) {
+function InstallLogic(target,installer) {
     target.and = and;
     target.or = or;
     target.not = not;
     LOGIC_BINDS.forEach(installer);
 }
 
-export default installLogic;
+export default InstallLogic;
