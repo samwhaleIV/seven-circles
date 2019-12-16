@@ -391,10 +391,6 @@ const getPaths = (grid,islandWidth,islandHeight) => {
     return allPaths;
 }
 
-const removeRandomEntry = list => {
-    return list.splice(Math.floor(Math.random()*list.length),1)[0];
-}
-
 const makePaths = (
     grid,settings,islandWidth,islandHeight
 ) => {
@@ -461,12 +457,17 @@ function IslandMaker({layerBridge,width,height,settings}) {
             grid,settings,
             islandWidth,islandHeight
         );
+        return this;
     }
 
     this.paint = ({
         name,x=0,y=0,width=islandWidth,height=islandHeight,
-        toBackground,toForeground,toCollision,toLighting
+        toBackground,toForeground,toCollision,toLighting,
+        generateGrid=false
     }) => {
+        if(generateGrid) {
+            this.generateGrid();
+        }
         layerBridge.stamp({
             name: name,
             x: x,
@@ -480,7 +481,14 @@ function IslandMaker({layerBridge,width,height,settings}) {
             parameters: [grid]
         })
     }
+    return this;
 }
+const doubleIterator = (method,width,height) => {
+    for(let x = 0;x<width;x++) {
+    for(let y = 0;y<height;y++) {
+        method.call(null,x,y);
+    }};
+};
 function getGrid(width,height,generationData) {
     const grid = new Array(width);
 
@@ -488,8 +496,7 @@ function getGrid(width,height,generationData) {
         grid[x] = new Array(height).fill(tileTypes.nothing);
     }
 
-    for(let x = 0;x<width;x++) {
-    for(let y = 0;y<height;y++) {
+    doubleIterator((x,y)=>{
         const area9 = getArea9(
             generationData,x,y
         );
@@ -502,10 +509,9 @@ function getGrid(width,height,generationData) {
         if(targetValue !== null) {
             grid[x][y] = targetValue;
         }
-    }}
+    },width,height);
 
-    for(let x = 0;x<width;x++) {
-    for(let y = 0;y<height;y++) {
+    doubleIterator((x,y)=>{
         const area9 = getArea9(
             grid,x,y
         );
@@ -514,7 +520,7 @@ function getGrid(width,height,generationData) {
         tryResolveDoubleEdges.call(
             this,area9,generationValue,grid,x,y
         );
-    }}
+    },width,height);
 
     const dataType = this.bridge.dynamicTypes.twoDimensional;
     return {

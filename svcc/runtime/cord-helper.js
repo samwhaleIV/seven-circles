@@ -5,6 +5,8 @@ const LAYER_NAMES = [
     "lighting"
 ];
 
+const ITERATE_STOP = Symbol("ITERATE_STOP");
+
 function applyGrid(
     grid,dim1,dim2,dim1check,dim2check,dim1min,dim2min,dim1max,dim2max,getIdx,translateIdx,setIdx
 ) {
@@ -240,15 +242,23 @@ function CordHelper(map) {
         })(layer);
     }
 
-    this.remap = filter => {
+    this.getLayers = () => {
+        return layers.slice(0);
+    }
+
+    this.iterate = function(filter) {
         const length = baseData.background.length;
         for(let i = 0;i<length;i++) {
             const position = getXY(i);
             helperX = position.x;
             helperY = position.y;
-            filter.call(null,remapHelper);
+            const result = filter.call(null,remapHelper);
+            if(result === ITERATE_STOP) {
+                break;
+            }
         }
     }
+    this.iterate.stop = ITERATE_STOP;
 
     this.applyHorizontalGrid = (x,y,grid,filters) => applyGrid(
         grid.tiles,x,y,0,y,

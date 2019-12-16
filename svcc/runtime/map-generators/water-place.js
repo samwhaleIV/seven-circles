@@ -2,6 +2,7 @@ import TileBridge from "../tile-bridge.js";
 import LayerBridge from "../layer-bridge.js";
 import GetWaterBackground from "../../../../elven-engine/renderers/components/world/water-background.js";
 import IslandMaker from "../island-maker.js";
+import Decorator from "../decorator.js";
 
 const objects = {};
 const bridge = new TileBridge(objects);
@@ -15,6 +16,7 @@ bridge.addDynamicObject(
 );
 
 const BALL_COLLISION = 8;
+const ISLAND_GROUND = 519;
 
 bridge.addDynamicObject(
     "beach_ball",
@@ -28,19 +30,17 @@ bridge.addDynamicObject(
 );
 
 function getStartPosition(layers,width,height) {
-    for(let x = 0;x<width;x++) {
-    for(let y = 0;y<height;y++) {
-        if(!layers.collision.get(x,y)) {
-            return {
-                x: x,
-                y: y
+    let position;
+    layers.iterate(data=>{
+        if(!data.collision) {
+            position = {
+                x: data.x,
+                y: data.y
             };
+            return layers.iterate.stop;
         }
-    }}
-    return {
-        x: 0,
-        y: 0
-    };
+    });
+    return position ? position : {x:0,y:0};
 }
 
 function WaterPlace(layers) {
@@ -50,7 +50,7 @@ function WaterPlace(layers) {
         layers,bridge
     );
 
-    const islandMaker = new IslandMaker({
+    IslandMaker.call({},({
         layerBridge: layerBridge,
         width: this.map.width,
         height: this.map.height,
@@ -61,32 +61,27 @@ function WaterPlace(layers) {
             maxHeight: 4,
             fill: 0.9
         }
-    });
-
-    islandMaker.generateGrid();
-    islandMaker.paint({
+    })).paint({
+        generateGrid: true,
         name: "beach_island",
-        toBackground: true
+        toBackground: true  
     });
 
-    const ballAttempts = 100;
+    const decorator = new Decorator(layerBridge);
+    const decorate = decorator.decorate;
+    const logic = decorator.layerLogic;
 
-    for(let i = 0;i<ballAttempts;i++) {
-        var x = Math.floor(Math.random()*this.map.width);
-        var y = Math.floor(Math.random()*this.map.height);
-        if(layers.background.get(x,y) === 519) {
-            layerBridge.stamp({
-                name: "beach_ball",
-                x: x,
-                y: y,
-                collisionType: BALL_COLLISION,
-                toForeground: true
-            })
+    decorate({
+        qualifier: logic.backgroundEquals(ISLAND_GROUND),
+        fill: 1 / 2,
+        stamp: {
+            name: "beach_ball",
+            collisionType: BALL_COLLISION,
+            toForeground: true   
         }
-    }
+    });
 
-
-    layers.remap(data=>{
+    layers.iterate(data=>{
         if(!data.background) {
             data.collision = 1;
         }
