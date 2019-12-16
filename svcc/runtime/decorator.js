@@ -3,7 +3,7 @@ import InstallLogic from "./logic-bind.js";
 const INVALID_COUNT_SPECIFICATION = "Cannot use maxCount and fill attribute simultaneously!";
 
 function Decorator(layerBridge) {
-    this.layerLogic = (function(){
+    this.logic = (function(){
         const layers = layerBridge.layers.getLayers();
         InstallLogic(this,([suffix,method]) => {
             layers.forEach(layer => {

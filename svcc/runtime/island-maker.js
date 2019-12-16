@@ -462,12 +462,8 @@ function IslandMaker({layerBridge,width,height,settings}) {
 
     this.paint = ({
         name,x=0,y=0,width=islandWidth,height=islandHeight,
-        toBackground,toForeground,toCollision,toLighting,
-        generateGrid=false
+        toBackground,toForeground,toCollision,toLighting
     }) => {
-        if(generateGrid) {
-            this.generateGrid();
-        }
         layerBridge.stamp({
             name: name,
             x: x,
@@ -608,6 +604,28 @@ IslandMaker.import = function() {
         name: "getIslandGrid",
         method: getGrid
     }];
+}
+IslandMaker.create = function({
+    layerBridge,width,height,settings,
+    name,x=0,y=0,
+    toBackground,toForeground,toCollision,toLighting,
+}) {
+    const islandMaker = new IslandMaker({
+        layerBridge: layerBridge,
+        width: width,
+        height: height,
+        settings: settings
+    });
+    islandMaker.generateGrid();
+    islandMaker.paint({
+        name: name,
+        x: x,
+        y: y,
+        toBackground: toBackground,
+        toForeground: toForeground,
+        toCollision: toCollision,
+        toLighting: toLighting
+    });
 }
 
 export default IslandMaker;

@@ -44,13 +44,11 @@ function getStartPosition(layers,width,height) {
 }
 
 function WaterPlace(layers) {
-    this.map.backgroundColor = "black";
 
-    const layerBridge = new LayerBridge(
-        layers,bridge
-    );
+    const layerBridge = new LayerBridge(layers,bridge);
+    const {decorate, logic} = new Decorator(layerBridge);
 
-    IslandMaker.call({},({
+    IslandMaker.create({
         layerBridge: layerBridge,
         width: this.map.width,
         height: this.map.height,
@@ -60,16 +58,10 @@ function WaterPlace(layers) {
             maxWidth: 5,
             maxHeight: 4,
             fill: 0.9
-        }
-    })).paint({
-        generateGrid: true,
+        },
         name: "beach_island",
-        toBackground: true  
+        toBackground: true
     });
-
-    const decorator = new Decorator(layerBridge);
-    const decorate = decorator.decorate;
-    const logic = decorator.layerLogic;
 
     decorate({
         qualifier: logic.backgroundEquals(ISLAND_GROUND),
