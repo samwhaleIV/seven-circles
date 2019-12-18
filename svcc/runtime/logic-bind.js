@@ -16,7 +16,6 @@ const greaterOrEqual = function(...parameters) {
 const lessOrEqual = function(...parameters) {
     return this.method.apply(null,parameters) <= this.value;
 }
-
 const group = function(allInclusive,...qualifiers) {
     const qualifierCount = qualifiers.length;
     return function(...parameters) {
@@ -36,13 +35,25 @@ const group = function(allInclusive,...qualifiers) {
         return allInclusive;
     }
 }
-
 const and = group.bind(null,true);
 const or = group.bind(null,false);
 
 const not = qualifier => {
     return function(...parameters) {
         return !qualifier.apply(null,parameters);
+    }
+}
+const chance = ({base,chance}) => {
+    return function(...parameters) {
+        if(Math.random() <= chance) {
+            if(typeof base === "function") {
+                return base.apply(null,parameters);
+            } else {
+                return base;
+            }
+        } else {
+            return false;
+        }
     }
 }
 
@@ -59,6 +70,7 @@ function InstallLogic(target,installer) {
     target.and = and;
     target.or = or;
     target.not = not;
+    target.chance = chance;
     LOGIC_BINDS.forEach(installer);
 }
 

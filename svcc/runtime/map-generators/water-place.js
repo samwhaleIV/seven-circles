@@ -26,38 +26,93 @@ bridge.addDynamicObject(
     }
 );
 
+bridge.addObject("water_heart",526,1,2);
+bridge.addObject("water_cake",588,1,1);
+bridge.addObject("water_tree",716,1,1);
+bridge.addObject("water_pole",589,1,1);
+bridge.addObject("water_tree_center",780,2,1);
+bridge.addObject("beach_umbrella",585,2,2);
+
+const WATER_OBJECTS = ["water_heart","water_cake","water_tree","water_pole","water_tree_center"];
+
 const BALL_COLLISION = 8;
 const ISLAND_GROUND = 519;
+const NORMAL_COLLISION = 1;
+const NONE = 0;
 
-function WaterPlace(layers) {
+function DecorateAll(decorate,logic) {
 
-    const layerBridge = new LayerBridge(layers,bridge);
-    const {decorate, logic} = new Decorator(layerBridge);
+    const IsGround = logic.and(
+        logic.backgroundEquals(ISLAND_GROUND),
+        logic.collisionEquals(NONE)
+    );
+    
+    const IsWater = logic.and(
+        logic.backgroundEquals(NONE),
+        logic.foregroundEquals(NONE),
+        logic.surrounding(
+            logic.foregroundEquals(NONE)
+        )
+    );
 
+    WATER_OBJECTS.forEach(object => decorate({
+        object: object,
+        qualifyObjectArea: true,
+        qualifier: IsWater,
+        fill: 1 / 8,
+        stamp: {
+            toForeground: true   
+        }
+    }));
+
+    decorate({
+        object: "beach_ball",
+        qualifier: IsGround,
+        fill: 1 / 16,
+        stamp: {
+            collisionType: BALL_COLLISION,
+            toForeground: true   
+        }
+    });
+
+    decorate({
+        object: "beach_umbrella",
+        qualifyObjectArea: true,
+        qualifier: IsGround,
+        fill: 1 / 16,
+        stamp: {
+            collisionType: NORMAL_COLLISION,
+            toForeground: true   
+        }
+    });
+
+}
+
+function MakeIslands(layerBridge) {
     IslandMaker.create({
         layerBridge: layerBridge,
         width: this.map.width,
         height: this.map.height,
         settings: {
-            minWidth: 3,
-            minHeight: 3,
-            maxWidth: 5,
-            maxHeight: 4,
-            fill: 0.9
+            minWidth: 4,
+            maxWidth: 8,
+            minHeight: 4,
+            maxHeight: 10,
+            fill: 0.9,
+            pathFill: 1 / 4
         },
         name: "beach_island",
         toBackground: true
     });
+}
 
-    decorate({
-        qualifier: logic.backgroundEquals(ISLAND_GROUND),
-        fill: 1 / 2,
-        stamp: {
-            name: "beach_ball",
-            collisionType: BALL_COLLISION,
-            toForeground: true   
-        }
-    });
+function WaterPlace(layers) {
+    const layerBridge = new LayerBridge(layers,bridge);
+    const {decorate, logic} = new Decorator(layerBridge);
+
+    MakeIslands.call(this,layerBridge);
+
+    DecorateAll(decorate,logic,);
 
     layers.iterate(data=>{
         if(!data.background) {

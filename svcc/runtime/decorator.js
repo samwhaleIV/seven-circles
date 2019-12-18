@@ -3,6 +3,23 @@ import InstallLogic from "./logic-bind.js";
 const INVALID_COUNT_SPECIFICATION = "Cannot use maxCount and fill attribute simultaneously!";
 
 function Decorator(layerBridge) {
+    const proximityBase = function(base) {
+        const matrix = this.matrix;
+        const matrixCount = matrix.length;
+        return function(x,y) {
+            let xOffset, yOffset;
+            for(let i = 0;i<matrixCount;i++) {
+                [xOffset,yOffset] = matrix[i];
+                const baseMatch = base.call(
+                    null,x+xOffset,y+yOffset
+                );
+                if(!baseMatch) {
+                    return false;
+                }
+            }
+            return true;
+        }
+    };
     this.logic = (function(){
         const layers = layerBridge.layers.getLayers();
         InstallLogic(this,([suffix,method]) => {
@@ -15,28 +32,36 @@ function Decorator(layerBridge) {
         });
         return this;
     }).call({
-        "left-side": null,//todo
-        "right-side": null,//todo
-        "bottom-side": null,//todo
-        "top-side": null,//todo
-        "surrounding": function(base) {
-            const SURROUNDING_MATRIX = [
-                [-1,1],[0,-1],[1,-1],
-                [-1,0],[0, 0],[1, 0],
-                [-1,1],[0, 1],[1, 1]
-            ];
-            const MATRIX_COUNT = SURROUNDING_MATRIX.length;
-            return function(x,y) {
-                let xOffset, yOffset;
-                for(let i = 0;i<MATRIX_COUNT;i++) {
-                    [xOffset,yOffset] = SURROUNDING_MATRIX[i];
+        "leftSide": proximityBase.bind({matrix:[
+            [-1,1],[-1,0],[-1,1],
+        ]}),
+        "rightSide": proximityBase.bind({matrix:[
+            [1,-1],[1, 0],[1, 1]
+        ]}),
+        "bottomSide": proximityBase.bind({matrix:[
+            [-1,1],[0, 1],[1, 1]
+        ]}),
+        "topSide": proximityBase.bind({matrix:[
+            [-1,1],[0,-1],[1,-1]
+        ]}),
+        "surrounding": proximityBase.bind({matrix:[
+            [-1,1],[0,-1],[1,-1],
+            [-1,0],       [1, 0],
+            [-1,1],[0, 1],[1, 1]
+        ]}),
+        "area": function({base,width,height}) {
+            return function(startX,startY) {
+                const xEnd = startX + width;
+                const yEnd = startY + height;
+                for(let x = startX;x<xEnd;x++) {
+                for(let y = startY;y<yEnd;y++) {
                     const baseMatch = base.call(
-                        null,x+xOffset,y+yOffset
+                        null,x,y
                     );
                     if(!baseMatch) {
                         return false;
                     }
-                }
+                }}
                 return true;
             }
         },
@@ -50,9 +75,11 @@ function Decorator(layerBridge) {
     });
 
     this.decorate = ({
+        object,
         maxCount,
         fill,
         qualifier = () => true,
+        qualifyObjectArea,
         stamp = {}
     }) => {
         if(maxCount !== undefined && fill !== undefined) {
@@ -72,7 +99,9 @@ function Decorator(layerBridge) {
         if(!matchCount) {
             return 0;
         }
-        const ownStamp = Object.assign({},stamp);
+        const ownStamp = Object.assign({
+            name: object
+        },stamp);
 
         let remainingObjects = 0;
         if(maxCount !== undefined) {
@@ -84,10 +113,24 @@ function Decorator(layerBridge) {
             return 0;
         }
 
+        let rootQualifier;
+        if(qualifyObjectArea) {
+            const bridgedObject = layerBridge.bridge.get(object);
+            rootQualifier = (...parameters) => {
+                return this.logic.area({
+                    base: qualifier,
+                    width: bridgedObject.width,
+                    height: bridgedObject.height
+                }).apply(null,parameters);
+            }
+        } else {
+            rootQualifier = qualifier;
+        }
+
         let objectCount = 0;
         for(let i = 0;i < matchCount && remainingObjects > 0;i++) {
             const match = removeRandomEntry(matches);
-            const qualifierResult = qualifier.call(
+            const qualifierResult = rootQualifier.call(
                 null,match.x,match.y
             );
             if(qualifierResult) {
