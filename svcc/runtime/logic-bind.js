@@ -43,19 +43,6 @@ const not = qualifier => {
         return !qualifier.apply(null,parameters);
     }
 }
-const chance = ({base,chance}) => {
-    return function(...parameters) {
-        if(Math.random() <= chance) {
-            if(typeof base === "function") {
-                return base.apply(null,parameters);
-            } else {
-                return base;
-            }
-        } else {
-            return false;
-        }
-    }
-}
 
 const LOGIC_BINDS = Object.entries({
     "Equals": equal,
@@ -70,7 +57,6 @@ function InstallLogic(target,installer) {
     target.and = and;
     target.or = or;
     target.not = not;
-    target.chance = chance;
     LOGIC_BINDS.forEach(installer);
 }
 

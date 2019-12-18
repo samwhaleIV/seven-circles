@@ -78,17 +78,27 @@ function LayerBridge(layers,bridge) {
     }
 
     const generateCollisionLayer = (
-        oneDimensional,length,collisionType,gridLayer
+        oneDimensional,length,collisionType,gridLayer,stampName
     ) => {
         let collisionLayer;
         if(oneDimensional) {
             collisionLayer = new Array(length);
-            collisionLayer.fill(collisionType);
+            if(typeof collisionType === "function") {
+                for(let i = 0;i<length;i++) {
+                    const type = collisionType.call(null,{
+                        name: stampName,
+                        x: i,
+                        y: i
+                    });
+                    collisionLayer[i] = type;
+                }
+            } else {
+                collisionLayer.fill(collisionType);
+            }
         } else {
             collisionLayer = bridge.getObject(
-                gridLayer.width,
-                gridLayer.height,
-                collisionType
+                gridLayer.width,gridLayer.height,
+                collisionType,0,0,{name:stampName}
             );
         }
         return collisionLayer;
@@ -166,7 +176,7 @@ function LayerBridge(layers,bridge) {
         const toCollision = collisionType !== undefined;
         if(toCollision) {
             collisionLayer = generateCollisionLayer(
-                oneDimensional,length,collisionType,gridLayer
+                oneDimensional,length,collisionType,gridLayer,name
             );
         }
     

@@ -592,7 +592,10 @@ function getGridMeta(
 
     return metadata;
 }
-IslandMaker.getGridMeta=  function(tileBridge,...parameters) {
+function addIsland(name,...parameters) {
+    return this.addDynamicObject(name,getGrid,getGridMeta.apply(this,parameters));
+}
+IslandMaker.getGridMeta = function(tileBridge,...parameters) {
     getGridMeta.apply(tileBridge,parameters);
 }
 IslandMaker.getGrid = getGrid;
@@ -603,6 +606,9 @@ IslandMaker.import = function() {
     },{
         name: "getIslandGrid",
         method: getGrid
+    },{
+        name: "addIsland",
+        method: addIsland
     }];
 }
 IslandMaker.create = function({

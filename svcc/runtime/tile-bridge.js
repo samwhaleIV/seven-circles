@@ -26,6 +26,23 @@ const EMPTY_GRID = {
     tiles: [[]]
 };
 
+const DEFAULT_FILL = function() {
+    return this.value;
+}
+const SOURCE_MAP_FILL = function({x,y}) {
+    return this.value + x + y * WorldTextureColumns;
+}
+function getDefaultFill(value) {
+    return DEFAULT_FILL.bind({
+        value: value
+    });
+}
+function getSourceMapFill(index) {
+    return SOURCE_MAP_FILL.bind({
+        value: index
+    });
+}
+
 function TileBridge(objects) {
     this.objectTypes = {
         discrete: DISCRETE_TYPE,
@@ -38,16 +55,20 @@ function TileBridge(objects) {
 
     this.get = name => objects[name];
 
-    const getObject = (width,height,fill,xOffset=0,yOffset=0) => {
+    const getObject = (
+        width,height,fill,xOffset=0,yOffset=0,fillParameters={}
+    ) => {
         if(typeof fill !== "function") {
-            const fillValue = fill;
-            fill = () => fillValue;
+            fill = getDefaultFill(fill);
         }
         const tiles = new Array(width);
         for(let x = 0;x<width;x++) {
             const column = new Array(height);
             for(let y = 0;y<height;y++) {
-                column[y] = fill.call(null,x+xOffset,y+yOffset);
+                column[y] = fill.call(null,Object.assign({
+                    x: x + xOffset,
+                    y: y + yOffset
+                },fillParameters));
             }
             tiles[x] = column;
         }
@@ -68,11 +89,11 @@ function TileBridge(objects) {
     }
 
     this.addObject = (name,index,width,height) => {
-        objects[name] = this.getObject(
-            width,height,
-            (x,y) =>
-            index + x + y * WorldTextureColumns
+        const fill = getSourceMapFill(index);
+        const object = this.getObject(
+            width,height,fill
         );
+        objects[name] = object;
     }
 
     this.addSmallObject = (name,index) => this.addObject(name,index,1,1);
@@ -80,10 +101,12 @@ function TileBridge(objects) {
 
     this.addDynamicObject = (name,getGrid,data) => {
         data.bridge = this;
-        objects[name] = {
+        const object = {
             type: DYNAMIC_TYPE,
             getGrid: getGrid.bind(data)
         }
+        objects[name] = object;
+        return object;
     }
     this.get3Grid = function(size) {
         if(size < 3) {
@@ -250,14 +273,27 @@ function TileBridge(objects) {
         return newCords;
     }
 
-    this.getRandom = function() {
+    const getRandom = function() {
         const randomIndex = Math.floor(
             Math.random()*this.tiles.length
         );
         const tileIndex = this.tiles[randomIndex];
-        return getObject(
-            this.width,this.height,tileIndex
+        const fill = getSourceMapFill(tileIndex);
+        const object = getObject(
+            this.width,this.height,fill
         );
+        return object;
+    }
+
+    this.addSelectObject = (name,width,height,tiles) => {
+        const object = this.addDynamicObject(name,getRandom,{
+            width: width,
+            height: height,
+            tiles: tiles
+        });
+        object.width = width;
+        object.height = height;
+        return object;
     }
 
     this.get9Grid = function(width,height) {
