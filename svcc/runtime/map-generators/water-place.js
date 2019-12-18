@@ -3,9 +3,21 @@ import LayerBridge from "../layer-bridge.js";
 import GetWaterBackground from "../../../../elven-engine/renderers/components/world/water-background.js";
 import IslandMaker from "../island-maker.js";
 import Decorator from "../decorator.js";
+import CollisionHelper from "../collision-helper.js";
 
 const objects = {};
 const bridge = new TileBridge(objects);
+
+const collisionData = {
+    "beach_ball": function() {
+        this.world.say("It's a beach ball.");
+    },
+    "beach_umbrella": function() {
+        this.world.say("It's a beach umbrella.");
+    }
+}
+
+const collisionHelper = new CollisionHelper(collisionData);
 
 bridge.import(IslandMaker);
 bridge.addIsland("beach_island",454,646,393);
@@ -21,31 +33,14 @@ bridge.addObject("water_dome",268,2,2);
 bridge.addSelectObject("beach_ball",1,1,[713,714,715,777,778,779]);
 bridge.addSelectObject("water_spike",1,2,[398,399]);
 
-const BALL_COLLISION = 8;
-const UMBRELLA_COLLISION = 9;
 const ISLAND_GROUND = 519;
-const NORMAL_COLLISION = 1;
 const NONE = 0;
-
-const FLAT = 1;
-const DOUBLE = 2;
-
-const COLLISION_MAP = {
-    "beach_ball": BALL_COLLISION,
-    "beach_umbrella": UMBRELLA_COLLISION
-}
-
-const matchNameToCollision = ({name}) => {
-    if(name in COLLISION_MAP) {
-        return COLLISION_MAP[name];
-    } else {
-        return NORMAL_COLLISION;
-    }
-}
 
 const DecorateAll = (_,decorateGroup,{
     and, surrounding, backgroundEquals,collisionEquals, foregroundEquals
 }) => {
+
+    const fillMatch = collisionHelper.fillMatch;
 
     const IsGround = and(
         backgroundEquals(ISLAND_GROUND),
@@ -61,13 +56,13 @@ const DecorateAll = (_,decorateGroup,{
 
     decorateGroup({
         uniformMap: {
-            "water_heart": FLAT,
-            "water_cake": FLAT,
-            "water_tree": FLAT,
-            "water_pole": FLAT,
-            "water_tree_center": FLAT,
-            "water_dome": DOUBLE,
-            "water_spike": FLAT
+            "water_heart": 1,
+            "water_cake": 1,
+            "water_tree": 1,
+            "water_pole": 1,
+            "water_tree_center": 1,
+            "water_dome": 2,
+            "water_spike": 1
         },
         qualifier: IsWater,
         fill: Infinity,
@@ -84,7 +79,7 @@ const DecorateAll = (_,decorateGroup,{
         qualifier: IsGround,
         fill: 1 / 32,
         stamp: {
-            collisionType: matchNameToCollision,
+            collisionType: fillMatch,
             toForeground: true   
         }
     });
@@ -127,13 +122,7 @@ function WaterPlace(layers) {
         this.load = () => {
             world.addPlayer(startPosition.x,startPosition.y);
         }
-        this.worldClicked = type => {
-            if(type === BALL_COLLISION) {
-                world.say("It's a beach ball.");
-            } else if(type === UMBRELLA_COLLISION) {
-                world.say("It's a beach umbrella.");
-            }
-        }
+        this.worldClicked = collisionHelper.triggerLink(this);
     }
     this.map.fxBackground = GetWaterBackground(80,112);
 }
