@@ -23,7 +23,7 @@ const loadCallback = () => {
     rendererState.fader.fadeOut(firstRendererState,...loadParameters);
     rendererState.fader.didSetRendererState = () => {
         if(rendererState.song && !rendererState.songIntro) {
-            const fancyEncodingData = SongsWithTheNewFancyIntroEncoding[
+            const fancyEncodingData = FANCY_INTRO_SONGS[
                 rendererState.song
             ];
             if(fancyEncodingData) {
