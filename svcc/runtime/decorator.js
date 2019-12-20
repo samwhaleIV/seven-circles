@@ -146,8 +146,8 @@ function Decorator(layerBridge) {
 
         let objectCount = 0;
         while(matches.length && objectCount < maxObjects) {
-            const match = removeRandomEntry(matches);
-            const object = selectRandomEntry(objectSelectionPool);
+            const match = matches.popRandom();
+            const object = objectSelectionPool.getRandom();
             const qualifierResult = object.qualifier.call(
                 null,match.x,match.y
             );
@@ -234,7 +234,7 @@ function Decorator(layerBridge) {
 
         let objectCount = 0;
         while(matches.length && objectCount < maxObjects) {
-            const match = removeRandomEntry(matches);
+            const match = matches.popRandom();
             const qualifierResult = rootQualifier.call(
                 null,match.x,match.y
             );

@@ -52,4 +52,7 @@ const WorldTextureAnimationStart = Math.pow(WorldTextureColumns,2) - WorldTextur
 const FootPrintTiles = {
 };
 
-const GameCharacterData = {};
+const MUSIC_INTRO_SUFFIX = "_intro";
+const SONG_INTRO_LOOKUP = {};
+const FANCY_INTRO_SONGS = {};
+const CHARACTER_DATA = {};

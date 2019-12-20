@@ -397,7 +397,7 @@ const makePaths = (
     const paths = getPaths(grid,islandWidth,islandHeight);
     let pathCount = Math.round(settings.pathFill * paths.length);
     while(pathCount > 0) {
-        const path = removeRandomEntry(paths);
+        const path = paths.popRandom();
         for(let i = 0;i<path.length;i++) {
             const pathPosition = path[i];
             grid[pathPosition.x][pathPosition.y] = tileTypes.pathway;
