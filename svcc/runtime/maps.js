@@ -11,7 +11,8 @@ addMap("pink-place",
 );
 
 Math.random.seedify();
-Math.random.seed = 8022020;
+Math.random.generateSeed();
+//Math.random.seed = 8022020;
 
 addMap("water-place",
     MapGen.External(100,100,WaterPlace)
