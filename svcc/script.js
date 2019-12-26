@@ -1,6 +1,7 @@
 "use strict";
 
 import SVCCWorldRenderer from "./renderers/world.js";
+import RandomVisRenderer from "./renderers/random-vis.js";
 import "./runtime/maps.js";
 
 const loadCallback = () => {
@@ -18,7 +19,10 @@ const loadCallback = () => {
     //todo preload fader effect renderer
     startRenderer();
     setFaderEffectsRenderer({render:function(){}});
-    const firstRendererState = SVCCWorldRenderer;
+    let firstRendererState = SVCCWorldRenderer;
+    if(ENV_FLAGS.DEBUG_RANDOM) {
+        firstRendererState = RandomVisRenderer;
+    }
     const loadParameters = [];
     rendererState.fader.fadeOut(firstRendererState,...loadParameters);
     rendererState.fader.didSetRendererState = () => {

@@ -8,5 +8,7 @@ const ENV_FLAGS = {
     ENABLE_F_BUTTONS: true,
     DEBUG_MAP: "water-place",
     DEBUG_PLAYER_CONVOY: false,
-    CONVOY_TRACE: false
+    CONVOY_TRACE: false,
+    INSTALL_SEEDED_RANDOM: true,
+    DEBUG_RANDOM: false
 };

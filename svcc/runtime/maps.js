@@ -10,6 +10,11 @@ addMap("pink-place",
     MapGen.External(100,100,PinkPlace)
 );
 
+Math.random.seedify();
+Math.random.seed = 8022020;
+
 addMap("water-place",
     MapGen.External(100,100,WaterPlace)
 );
+
+Math.random.purify();
