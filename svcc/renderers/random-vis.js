@@ -1,9 +1,9 @@
 function RandomVisRenderer() {
+    //import("./svcc/renderers/random-vis.js").then(module => rendererState.fader.fadeOut(module.default))
+
     this.noPixelScale = true;
     this.disableAdaptiveFill = true;
 
-    //Math.random.seedify();
-    //Math.random.seed = 152792162880201;
     console.log("Seed: " + Math.random.seed);
 
     const STRIDE_SIZE = 100;
@@ -20,7 +20,8 @@ function RandomVisRenderer() {
             }
             context.rect(x,y,1,1);
         }
-    }
+    };
+
     const strideAll = left => {
         if(left) {
             Math.random.seedify();
@@ -32,21 +33,18 @@ function RandomVisRenderer() {
         },${
             Math.floor(Math.random()*255)
         },${
-            Math.floor(Math.random()*0)
+            Math.floor(Math.random()*255)
         },0.5)`;
         context.beginPath();
         for(let i = 0;i<STRIDE_SETS;i++) {
             stride(left);
         }
         context.fill();
-    }
-    let lastFrame = 0;
-    this.render = timestamp => {
-        context.save();
-        //context.translate((timestamp-lastFrame)/-100,0);
-        lastFrame = timestamp;
+    };
+
+    this.start = getContextClearer();
+    this.render = () => {
         tryRenderBufferContext();
-        context.restore();
         strideAll(true);
         strideAll(false);
     }
